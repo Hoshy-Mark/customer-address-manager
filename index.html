@@ -28,5 +28,21 @@
 
   <!-- Script custom -->
   <script src="script.js"></script>
+  <div class="container mt-5">
+    <h2 class="text-center">Login</h2>
+    <form id="loginForm" class="mx-auto" style="max-width: 400px;">
+      <div class="mb-3">
+        <label for="usuario" class="form-label">Usuário</label>
+        <input type="text" class="form-control" id="usuario" required />
+      </div>
+      <div class="mb-3">
+        <label for="senha" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="senha" required />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Entrar</button>
+      <div id="loginMsg" class="mt-3 text-center text-danger"></div>
+    </form>
+  </div>
 </body>
 </html>
+
