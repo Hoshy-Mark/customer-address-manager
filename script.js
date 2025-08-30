@@ -1,3 +1,5 @@
+let editingClienteId = null; // null = criar novo, number = editar
+
 // ==========================================
 // AlaSQL - Criação de Tabelas e Dados Iniciais
 // ==========================================
@@ -74,6 +76,43 @@ function showToast(message, type = 'success') {
   toast.addEventListener('hidden.bs.toast', () => toast.remove());
 }
 
+function showConfirmToast(message, onConfirm, onCancel) {
+  const toastContainer = document.getElementById('toastContainer');
+
+  const toast = document.createElement('div');
+  toast.className = 'toast align-items-center text-bg-warning border-0 mb-2';
+  toast.setAttribute('role', 'alert');
+  toast.setAttribute('aria-live', 'assertive');
+  toast.setAttribute('aria-atomic', 'true');
+
+  toast.innerHTML = `
+    <div class="d-flex flex-column p-2">
+      <div class="toast-body mb-2">${message}</div>
+      <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-sm btn-success confirmBtn">Confirmar</button>
+        <button type="button" class="btn btn-sm btn-secondary cancelBtn">Cancelar</button>
+      </div>
+    </div>
+  `;
+
+  toastContainer.appendChild(toast);
+  const bsToast = new bootstrap.Toast(toast, { autohide: false });
+  bsToast.show();
+
+  toast.querySelector('.confirmBtn').addEventListener('click', () => {
+    onConfirm();
+    bsToast.hide();
+  });
+
+  toast.querySelector('.cancelBtn').addEventListener('click', () => {
+    if (onCancel) onCancel();
+    bsToast.hide();
+  });
+
+  toast.addEventListener('hidden.bs.toast', () => toast.remove());
+}
+
+
 // ==========================================
 // Funções de Autenticação
 // ==========================================
@@ -119,6 +158,75 @@ function loadJSONToDB(data) {
   );
 }
 
+
+// Função de editar clientes
+
+function editCliente(id) {
+  const cliente = alasql('SELECT * FROM clientes WHERE id = ?', [id])[0];
+  if (!cliente) return showToast('Cliente não encontrado!', 'danger');
+
+  // Guarda o id para edição
+  editingClienteId = id;
+
+  // Preenche formulário
+  document.getElementById('clienteNome').value = cliente.nome;
+  document.getElementById('clienteCpf').value = cliente.cpf;
+  document.getElementById('clienteDataNascimento').value = cliente.dataNascimento;
+  document.getElementById('clienteTelefone').value = cliente.telefone;
+  document.getElementById('clienteCelular').value = cliente.celular;
+
+  clienteFormSection.classList.remove('d-none');
+  clientesSection.classList.add('d-none');
+
+  // Substituir evento de submit para atualizar
+  const submitHandler = function(e) {
+    e.preventDefault();
+
+    if (!clienteForm.checkValidity()) {
+      clienteForm.reportValidity();
+      return;
+    }
+
+    const nome = document.getElementById('clienteNome').value.trim();
+    const cpf = document.getElementById('clienteCpf').value.trim();
+    const dataNascimento = document.getElementById('clienteDataNascimento').value;
+    const telefone = document.getElementById('clienteTelefone').value.trim();
+    const celular = document.getElementById('clienteCelular').value.trim();
+
+    try {
+      alasql(
+        'UPDATE clientes SET nome=?, cpf=?, dataNascimento=?, telefone=?, celular=? WHERE id=?',
+        [nome, cpf, dataNascimento, telefone, celular, id]
+      );
+      showToast('Cliente atualizado com sucesso!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao atualizar cliente!', 'danger');
+      return;
+    }
+
+    clienteForm.reset();
+    renderClientes();
+    clienteFormSection.classList.add('d-none');
+    clientesSection.classList.remove('d-none');
+
+    // Remove listener para não acumular
+    clienteForm.removeEventListener('submit', submitHandler);
+  };
+
+  clienteForm.addEventListener('submit', submitHandler);
+}
+
+// Função de excluir cliente
+
+function deleteCliente(id) {
+  showConfirmToast('Deseja realmente excluir este cliente?', () => {
+    alasql('DELETE FROM clientes WHERE id = ?', [id]);
+    showToast('Cliente excluído com sucesso!', 'success');
+    renderClientes();
+  });
+}
+
 // ==========================================
 // Renderiza clientes na tabela
 // ==========================================
@@ -136,8 +244,21 @@ function renderClientes() {
       <td>${c.dataNascimento}</td>
       <td>${c.telefone}</td>
       <td>${c.celular}</td>
+      <td>
+        <button class="btn btn-sm btn-warning editClienteBtn" data-id="${c.id}">Editar</button>
+        <button class="btn btn-sm btn-danger deleteClienteBtn" data-id="${c.id}">Excluir</button>
+      </td>
     `;
     tbody.appendChild(tr);
+  });
+
+  // Event listeners para edição e exclusão
+  document.querySelectorAll('.editClienteBtn').forEach(btn => {
+    btn.addEventListener('click', () => editCliente(Number(btn.dataset.id)));
+  });
+
+  document.querySelectorAll('.deleteClienteBtn').forEach(btn => {
+    btn.addEventListener('click', () => deleteCliente(Number(btn.dataset.id)));
   });
 }
 
@@ -283,15 +404,34 @@ document.addEventListener('DOMContentLoaded', function() {
       return showToast('Todos os campos são obrigatórios!', 'danger');
     }
 
-    const result = registerCliente(nome, cpf, dataNascimento, telefone, celular);
-
-    showToast(result.message, result.success ? 'success' : 'danger');
-
-    if (result.success) {
-      clienteForm.reset();
-      renderClientes(); // atualiza a tabela
+    if (editingClienteId) {
+      // Atualiza cliente existente
+      try {
+        alasql(
+          'UPDATE clientes SET nome=?, cpf=?, dataNascimento=?, telefone=?, celular=? WHERE id=?',
+          [nome, cpf, dataNascimento, telefone, celular, editingClienteId]
+        );
+        showToast('Cliente atualizado com sucesso!', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao atualizar cliente!', 'danger');
+        return;
+      }
+    } else {
+      // Cria novo cliente
+      const result = registerCliente(nome, cpf, dataNascimento, telefone, celular);
+      showToast(result.message, result.success ? 'success' : 'danger');
+      if (!result.success) return;
     }
+
+    // Reset
+    clienteForm.reset();
+    editingClienteId = null; // volta para criar novo
+    renderClientes();
+    clienteFormSection.classList.add('d-none');
+    clientesSection.classList.remove('d-none');
   });
+
 
 
   //----- Máscaras de CPF, Telefone e Celular -----
