@@ -16,11 +16,14 @@
 </head>
 <body>
 
-  <!-- Botão de Logout fixo no topo -->
+  <!-- Botão de Logout e Exportar Banco fixos no topo -->
   <nav class="navbar navbar-light bg-light fixed-top">
     <div class="container-fluid">
       <span class="navbar-brand mb-0 h1">Customer Address Manager</span>
-      <button id="logoutBtn" class="btn btn-outline-danger">Logout</button>
+      <div class="d-flex ms-auto gap-2">
+        <button id="exportDbBtn" class="btn btn-outline-success btn-sm">Exportar Banco</button>
+        <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Logout</button>
+      </div>
     </div>
   </nav>
 
@@ -84,6 +87,11 @@
         <button type="button" id="showLogin" class="btn btn-link">Já tenho cadastro</button>
       </div>
     </form>
+
+    <!-- Botão de Configurações -->
+    <div class="text-center mt-3">
+      <button type="button" id="showConfigRegister" class="btn btn-link">Configurações</button>
+    </div>
   </div>
 
   <!-- Tela de Configuração -->

@@ -22,6 +22,27 @@ function initDB() {
           [1, '12345-678', 'Rua A', 'Bairro B', 'Cidade C', 'Estado D', 'Brasil', true]);
 }
 
+
+// Exportar banco de dados
+function exportDB() {
+  const usuarios = alasql('SELECT * FROM usuarios');
+  const clientes = alasql('SELECT * FROM clientes');
+  const enderecos = alasql('SELECT * FROM enderecos');
+
+  const data = { usuarios, clientes, enderecos };
+  const json = JSON.stringify(data, null, 2);
+
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'banco.json';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast('Banco exportado com sucesso!', 'success');
+}
+
 // ==========================================
 // Funções de Clientes
 // ==========================================
@@ -134,7 +155,7 @@ function editEndereco(id) {
   enderecosSection.classList.add('d-none');
 }
 
-// Salvar edição do endereço (mantendo regra de principal)
+// Salvar Endereço e Edição de Endereço
 document.getElementById('enderecoForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const clienteId = Number(document.getElementById('selectCliente').value);
@@ -467,6 +488,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('usuario').value = '';
     document.getElementById('senha').value = '';
   });
+  
+  // ----- Exportar DB -----
+
+  document.getElementById('exportDbBtn').addEventListener('click', exportDB);
 
   // ----- Login -----
   loginForm.addEventListener('submit', function(e) {
@@ -513,6 +538,14 @@ document.addEventListener('DOMContentLoaded', function() {
     configSection.classList.add('d-none');
   });
 
+  const showConfigRegister = document.getElementById('showConfigRegister');
+  showConfigRegister.addEventListener('click', () => {
+    configSection.classList.remove('d-none');
+    loginSection.classList.add('d-none');
+    registerSection.classList.add('d-none');
+    clientesSection.classList.add('d-none');
+  });
+  
   showLogin.addEventListener('click', () => {
     registerSection.classList.add('d-none');
     loginSection.classList.remove('d-none');
