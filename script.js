@@ -14,9 +14,33 @@ function initDB() {
   // Inserção de dados de teste iniciais
   alasql('INSERT INTO usuarios (nome, usuario, senha) VALUES (?, ?, ?)', ['Administrador', 'admin', '123456']);
   alasql('INSERT INTO clientes (nome, cpf, dataNascimento, telefone, celular) VALUES (?, ?, ?, ?, ?)', 
-          ['João da Silva', '12345678900', '1990-01-01', '1111-1111', '99999-9999']);
+          ['João da Silva', '123.456.890-10', '1990-01-01', '1111-1111', '99999-9999']);
   alasql('INSERT INTO enderecos (clienteId, cep, rua, bairro, cidade, estado, pais, principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [1, '12345-678', 'Rua A', 'Bairro B', 'Cidade C', 'Estado D', 'Brasil', true]);
+}
+
+// ==========================================
+// Funções de Clientes
+// ==========================================
+function registerCliente(nome, cpf, dataNascimento, telefone, celular) {
+  try {
+    // Verifica se CPF já existe
+    const exists = alasql('SELECT * FROM clientes WHERE cpf = ?', [cpf]);
+    if (exists.length > 0) {
+      return { success: false, message: 'CPF já cadastrado!' };
+    }
+
+    // Tenta inserir no banco
+    alasql(
+      'INSERT INTO clientes (nome, cpf, dataNascimento, telefone, celular) VALUES (?, ?, ?, ?, ?)',
+      [nome, cpf, dataNascimento, telefone, celular]
+    );
+
+    return { success: true, message: 'Cliente cadastrado com sucesso!' };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'Erro ao salvar cliente!' };
+  }
 }
 
 // ==========================================
@@ -259,17 +283,59 @@ document.addEventListener('DOMContentLoaded', function() {
       return showToast('Todos os campos são obrigatórios!', 'danger');
     }
 
-    alasql(
-      'INSERT INTO clientes (nome, cpf, dataNascimento, telefone, celular) VALUES (?, ?, ?, ?, ?)',
-      [nome, cpf, dataNascimento, telefone, celular]
-    );
+    const result = registerCliente(nome, cpf, dataNascimento, telefone, celular);
 
-    showToast('Cliente cadastrado com sucesso!', 'success');
+    showToast(result.message, result.success ? 'success' : 'danger');
 
-    clienteForm.reset();
-    clienteFormSection.classList.add('d-none');
-    clientesSection.classList.remove('d-none');
-
-    renderClientes(); // Atualiza a tabela
+    if (result.success) {
+      clienteForm.reset();
+      renderClientes(); // atualiza a tabela
+    }
   });
+
+
+  //----- Máscaras de CPF, Telefone e Celular -----
+
+
+  // Função para aplicar máscara de CPF: 123.456.789-01
+  function maskCPF(input) {
+    input.addEventListener('input', function() {
+      let value = input.value.replace(/\D/g, ''); // remove tudo que não é número
+      if (value.length > 11) value = value.slice(0, 11); // limita a 11 dígitos
+      value = value.replace(/(\d{3})(\d)/, '$1.$2');
+      value = value.replace(/(\d{3})(\d)/, '$1.$2');
+      value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      input.value = value;
+    });
+  }
+
+  // Função para aplicar máscara de telefone fixo: 1234-5678
+  function maskTelefone(input) {
+    input.addEventListener('input', function() {
+      let value = input.value.replace(/\D/g, '');
+      if (value.length > 8) value = value.slice(0, 8);
+      value = value.replace(/(\d{4})(\d)/, '$1-$2');
+      input.value = value;
+    });
+  }
+
+  // Função para aplicar máscara de celular: 91234-5678
+  function maskCelular(input) {
+    input.addEventListener('input', function() {
+      let value = input.value.replace(/\D/g, '');
+      if (value.length > 9) value = value.slice(0, 9);
+      value = value.replace(/(\d{5})(\d)/, '$1-$2');
+      input.value = value;
+    });
+  }
+
+
+  // ----- Aplicar máscaras aos inputs correspondentes -----
+  const cpfInput = document.getElementById('clienteCpf');
+  const telefoneInput = document.getElementById('clienteTelefone');
+  const celularInput = document.getElementById('clienteCelular');
+
+  maskCPF(cpfInput);
+  maskTelefone(telefoneInput);
+  maskCelular(celularInput);
 });
