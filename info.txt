@@ -1,0 +1,69 @@
+INFO.txt - Customer Address Manager
+===================================
+
+Descrição do Projeto:
+--------------------
+Esta é uma mini aplicação web para gerenciamento de clientes e endereços, incluindo funcionalidades de login, cadastro de usuários, clientes, endereços e exportação/importação do banco de dados em formato JSON.
+
+Pré-requisitos para execução:
+-----------------------------
+1. Navegador moderno com suporte a ES Modules (Google Chrome, Firefox, Edge, etc.).
+2. Servidor local para evitar bloqueios de CORS, pois os scripts usam "type=module".
+   Abrir diretamente pelo "file://" não funcionará.
+
+Como executar o projeto:
+-----------------------
+
+Opção 1 (recomendado): Usando VS Code Live Server
+1. Abra o projeto no VS Code.
+2. Clique com o botão direito no arquivo index.html.
+3. Selecione "Open with Live Server" (Ele é uma Extensão do VS Code, precisa estar instalado).
+4. O navegador abrirá automaticamente a URL local.
+
+Opção 2: Usando Python (recomendado se tiver Python instalado)
+1. Abra o terminal na pasta do projeto.
+2. Execute:
+   python -m http.server 5500
+3. Abra o navegador e acesse:
+   http://localhost:5500/index.html
+
+Opção 3: Usando Node.js com http-server
+1. Abra o terminal na pasta do projeto.
+2. Instale o http-server globalmente (se ainda não tiver):
+   npm install -g http-server
+3. Execute:
+   http-server -p 5500
+4. Abra o navegador e acesse:
+   http://localhost:5500/index.html
+
+Funcionalidades:
+----------------
+1. **Login**: acesso com usuário e senha. Evita duplicidade de usuários.
+2. **Cadastro de Usuário**: cria novo usuário pelo próprio sistema.
+3. **Configurações**: permite upload de banco JSON pré-preenchido.
+4. **Clientes**: cadastro, edição, listagem e exclusão. Não permite CPF duplicado.
+5. **Endereços**: cadastro, edição, listagem e exclusão de endereços por cliente. 
+   Cada cliente deve ter ao menos um endereço principal.
+6. **Exportação de banco**: gera um arquivo JSON com todos os dados.
+
+Estrutura de pastas:
+-------------------
+project-root/
+│── index.html
+│── style.css
+│── INFO.txt
+│── js/
+│    ├── main.js          (ponto de entrada, importa outros módulos)
+│    ├── auth.js          (login, logout, cadastro)
+│    ├── db.js            (AlaSQL, exportar/importar JSON)
+│    ├── clientes.js      (CRUD clientes)
+│    ├── enderecos.js     (CRUD endereços)
+│    └── ui.js            (toasts, alternar seções, helpers de UI)
+
+Observações importantes:
+------------------------
+- Para testar corretamente, **sempre use um servidor local**.
+- A aplicação é responsiva e foi desenvolvida com Bootstrap.
+- Todos os dados do sistema ficam em memória via AlaSQL.js e podem ser exportados/importados em JSON.
+- Ao excluir clientes ou endereços, a aplicação garante integridade, mantendo ao menos um endereço principal por cliente.
+- Máscaras foram aplicadas em CPF, telefone e celular para manter consistência dos dados.
