@@ -1,4 +1,5 @@
 let editingClienteId = null; // null = criar novo, number = editar
+let editingEnderecoId = null;
 
 // ==========================================
 // AlaSQL - Criação de Tabelas e Dados Iniciais
@@ -43,6 +44,131 @@ function registerCliente(nome, cpf, dataNascimento, telefone, celular) {
     console.error(error);
     return { success: false, message: 'Erro ao salvar cliente!' };
   }
+}
+
+// ==========================================
+// Funções de Endereço
+// ==========================================
+
+// Renderiza lista de clientes no select
+function renderClientesSelect() {
+  const select = document.getElementById('selectCliente');
+  const clientes = alasql('SELECT * FROM clientes');
+  select.innerHTML = '';
+  clientes.forEach(c => {
+    const option = document.createElement('option');
+    option.value = c.id;
+    option.textContent = c.nome;
+    select.appendChild(option);
+  });
+}
+
+// Renderiza endereços do cliente selecionado
+function renderEnderecos() {
+  const clienteId = Number(document.getElementById('selectCliente').value);
+  const enderecos = alasql('SELECT * FROM enderecos WHERE clienteId = ?', [clienteId]);
+  const tbody = document.querySelector('#enderecosTable tbody');
+  tbody.innerHTML = '';
+
+  enderecos.forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${e.id}</td>
+      <td>${e.cep}</td>
+      <td>${e.rua}</td>
+      <td>${e.bairro}</td>
+      <td>${e.cidade}</td>
+      <td>${e.estado}</td>
+      <td>${e.pais}</td>
+      <td>${e.principal ? 'Sim' : 'Não'}</td>
+      <td>
+        <button class="btn btn-sm btn-warning editEnderecoBtn" data-id="${e.id}">Editar</button>
+        <button class="btn btn-sm btn-danger deleteEnderecoBtn" data-id="${e.id}">Excluir</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Eventos
+  document.querySelectorAll('.editEnderecoBtn').forEach(btn => {
+    btn.addEventListener('click', () => editEndereco(Number(btn.dataset.id)));
+  });
+  document.querySelectorAll('.deleteEnderecoBtn').forEach(btn => {
+    btn.addEventListener('click', () => deleteEndereco(Number(btn.dataset.id)));
+  });
+}
+
+// Abrir formulário de cadastro de endereço
+document.getElementById('showEnderecoForm').addEventListener('click', () => {
+  editingEnderecoId = null;
+  document.getElementById('enderecoForm').reset();
+  enderecoFormSection.classList.remove('d-none');
+  enderecosSection.classList.add('d-none');
+});
+
+// Cancelar cadastro
+document.getElementById('cancelarEndereco').addEventListener('click', () => {
+  enderecoForm.reset();
+  enderecoFormSection.classList.add('d-none');
+  enderecosSection.classList.remove('d-none');
+});
+
+// Seleção de cliente altera tabela de endereços
+document.getElementById('selectCliente').addEventListener('change', renderEnderecos);
+
+// Salvar endereço
+document.getElementById('enderecoForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const clienteId = Number(document.getElementById('selectCliente').value);
+  const cep = document.getElementById('enderecoCep').value.trim();
+  const rua = document.getElementById('enderecoRua').value.trim();
+  const bairro = document.getElementById('enderecoBairro').value.trim();
+  const cidade = document.getElementById('enderecoCidade').value.trim();
+  const estado = document.getElementById('enderecoEstado').value.trim();
+  const pais = document.getElementById('enderecoPais').value.trim();
+  const principal = document.getElementById('enderecoPrincipal').checked;
+
+  if (editingEnderecoId) {
+    alasql('UPDATE enderecos SET cep=?, rua=?, bairro=?, cidade=?, estado=?, pais=?, principal=? WHERE id=?',
+      [cep, rua, bairro, cidade, estado, pais, principal, editingEnderecoId]);
+    showToast('Endereço atualizado com sucesso!');
+  } else {
+    alasql('INSERT INTO enderecos (clienteId, cep, rua, bairro, cidade, estado, pais, principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [clienteId, cep, rua, bairro, cidade, estado, pais, principal]);
+    showToast('Endereço cadastrado com sucesso!');
+  }
+
+  enderecoForm.reset();
+  enderecoFormSection.classList.add('d-none');
+  enderecosSection.classList.remove('d-none');
+  renderEnderecos();
+});
+
+// Editar endereço
+function editEndereco(id) {
+  const endereco = alasql('SELECT * FROM enderecos WHERE id = ?', [id])[0];
+  if (!endereco) return showToast('Endereço não encontrado!', 'danger');
+
+  editingEnderecoId = id;
+  document.getElementById('enderecoCep').value = endereco.cep;
+  document.getElementById('enderecoRua').value = endereco.rua;
+  document.getElementById('enderecoBairro').value = endereco.bairro;
+  document.getElementById('enderecoCidade').value = endereco.cidade;
+  document.getElementById('enderecoEstado').value = endereco.estado;
+  document.getElementById('enderecoPais').value = endereco.pais;
+  document.getElementById('enderecoPrincipal').checked = endereco.principal;
+
+  enderecoFormSection.classList.remove('d-none');
+  enderecosSection.classList.add('d-none');
+}
+
+// Excluir endereço
+function deleteEndereco(id) {
+  showConfirmToast('Deseja realmente excluir este endereço?', () => {
+    alasql('DELETE FROM enderecos WHERE id = ?', [id]);
+    showToast('Endereço excluído com sucesso!');
+    renderEnderecos();
+  });
 }
 
 // ==========================================
@@ -245,6 +371,7 @@ function renderClientes() {
       <td>${c.telefone}</td>
       <td>${c.celular}</td>
       <td>
+        <button class="btn btn-sm btn-primary viewEnderecosBtn" data-id="${c.id}">Endereços</button>
         <button class="btn btn-sm btn-warning editClienteBtn" data-id="${c.id}">Editar</button>
         <button class="btn btn-sm btn-danger deleteClienteBtn" data-id="${c.id}">Excluir</button>
       </td>
@@ -252,7 +379,23 @@ function renderClientes() {
     tbody.appendChild(tr);
   });
 
-  // Event listeners para edição e exclusão
+  // Event listeners para lista de endereços, edição e exclusão
+  document.querySelectorAll('.viewEnderecosBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const clienteId = Number(btn.dataset.id);
+      clientesSection.classList.add('d-none');
+      enderecosSection.classList.remove('d-none');
+      renderClientesSelect();
+      document.getElementById('selectCliente').value = clienteId;
+      renderEnderecos();
+    });
+  });
+
+  document.getElementById('voltarClientesBtn').addEventListener('click', () => {
+    enderecosSection.classList.add('d-none');
+    clientesSection.classList.remove('d-none');
+  });
+
   document.querySelectorAll('.editClienteBtn').forEach(btn => {
     btn.addEventListener('click', () => editCliente(Number(btn.dataset.id)));
   });
@@ -279,6 +422,24 @@ document.addEventListener('DOMContentLoaded', function() {
   const registerForm = document.getElementById('registerForm');
   const showRegister = document.getElementById('showRegister');
   const showLogin = document.getElementById('showLogin');
+
+
+  // ----- Logout -----
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    // Esconde todas as seções de usuário
+    clientesSection.classList.add('d-none');
+    clienteFormSection.classList.add('d-none');
+    enderecosSection.classList.add('d-none');
+    enderecoFormSection.classList.add('d-none');
+    configSection.classList.add('d-none');
+
+    // Mostra a tela de login
+    loginSection.classList.remove('d-none');
+
+    // Limpa campos do login
+    document.getElementById('usuario').value = '';
+    document.getElementById('senha').value = '';
+  });
 
   // ----- Login -----
   loginForm.addEventListener('submit', function(e) {

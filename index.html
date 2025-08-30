@@ -15,6 +15,18 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <!-- Botão de Logout fixo no topo -->
+  <nav class="navbar navbar-light bg-light fixed-top">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1">Customer Address Manager</span>
+      <button id="logoutBtn" class="btn btn-outline-danger">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Espaço para evitar que o conteúdo fique atrás da navbar -->
+  <div style="height: 70px;"></div>
+
   <div class="container mt-5">
     <h1 class="text-center">Customer Address Manager</h1>
     <p class="text-center">Projeto de prova técnica</p>
@@ -134,6 +146,76 @@
       </div>
       <button type="submit" class="btn btn-success">Salvar Cliente</button>
       <button type="button" id="cancelarCliente" class="btn btn-secondary">Cancelar</button>
+    </form>
+  </section>
+
+  <!-- Tela de Lista de Endereços -->
+  <section id="enderecosSection" class="d-none">
+    <h2>Endereços do Cliente</h2>
+    
+    <!-- Seleção do cliente -->
+    <div class="mb-3">
+      <label for="selectCliente" class="form-label">Selecione o Cliente</label>
+      <select id="selectCliente" class="form-select"></select>
+    </div>
+
+    <!-- Botão para adicionar novo endereço -->
+    <button id="showEnderecoForm" class="btn btn-primary mb-3">Cadastrar Endereço</button>
+    <button id="voltarClientesBtn" class="btn btn-secondary mb-3">Voltar para Clientes</button>
+
+    <!-- Tabela de endereços -->
+    <table id="enderecosTable" class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>CEP</th>
+          <th>Rua</th>
+          <th>Bairro</th>
+          <th>Cidade</th>
+          <th>Estado</th>
+          <th>País</th>
+          <th>Principal</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Formulário de cadastro/edição de endereço -->
+  <section id="enderecoFormSection" class="d-none">
+    <h2>Cadastrar Endereço</h2>
+    <form id="enderecoForm">
+      <div class="mb-3">
+        <label for="enderecoCep" class="form-label">CEP</label>
+        <input type="text" id="enderecoCep" class="form-control" required pattern="\d{5}-\d{3}" title="Formato: 12345-678">
+      </div>
+      <div class="mb-3">
+        <label for="enderecoRua" class="form-label">Rua</label>
+        <input type="text" id="enderecoRua" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="enderecoBairro" class="form-label">Bairro</label>
+        <input type="text" id="enderecoBairro" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="enderecoCidade" class="form-label">Cidade</label>
+        <input type="text" id="enderecoCidade" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="enderecoEstado" class="form-label">Estado</label>
+        <input type="text" id="enderecoEstado" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="enderecoPais" class="form-label">País</label>
+        <input type="text" id="enderecoPais" class="form-control" required>
+      </div>
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="enderecoPrincipal">
+        <label for="enderecoPrincipal" class="form-check-label">Principal</label>
+      </div>
+      <button type="submit" class="btn btn-success">Salvar Endereço</button>
+      <button type="button" id="cancelarEndereco" class="btn btn-secondary">Cancelar</button>
     </form>
   </section>
 
