@@ -96,24 +96,69 @@ function loadJSONToDB(data) {
 }
 
 // ==========================================
+// Renderiza clientes na tabela
+// ==========================================
+function renderClientes() {
+  const clientes = alasql('SELECT * FROM clientes');
+  const tbody = document.querySelector('#clientesTable tbody');
+  tbody.innerHTML = ''; // limpa tabela antes de preencher
+
+  clientes.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.id}</td>
+      <td>${c.nome}</td>
+      <td>${c.cpf}</td>
+      <td>${c.dataNascimento}</td>
+      <td>${c.telefone}</td>
+      <td>${c.celular}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==========================================
 // Inicialização do DOM e Event Listeners
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
   initDB(); // Cria tabelas e dados iniciais
 
-  // ----- Login -----
+  // ----- Referências das seções -----
+  const loginSection = document.getElementById('loginSection');
+  const registerSection = document.getElementById('registerSection');
+  const clientesSection = document.getElementById('clientesSection');
+  const configSection = document.getElementById('configSection');
+  const configForm = document.getElementById('configForm'); 
+
   const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const showRegister = document.getElementById('showRegister');
+  const showLogin = document.getElementById('showLogin');
+
+  // ----- Login -----
   loginForm.addEventListener('submit', function(e) {
-    e.preventDefault(); // Evita recarregamento da página
+    e.preventDefault();
     const usuario = document.getElementById('usuario').value.trim();
     const senha = document.getElementById('senha').value.trim();
     const user = loginUser(usuario, senha);
-    user ? showToast(`Bem-vindo(a), ${user.nome}!`, 'success') 
-         : showToast('Usuário ou senha inválidos!', 'danger');
+
+    if(user) {
+      showToast(`Bem-vindo(a), ${user.nome}!`, 'success');
+
+      // Mostra tela de clientes e esconde todas as seções de login/cadastro/config
+      clientesSection.classList.remove('d-none');
+      loginSection.classList.add('d-none');
+      registerSection.classList.add('d-none');
+      configSection.classList.add('d-none');
+
+      // Renderiza tabela de clientes
+      renderClientes();
+    } else {
+      showToast('Usuário ou senha inválidos!', 'danger');
+    }
   });
 
   // ----- Cadastro -----
-  const registerForm = document.getElementById('registerForm');
   registerForm.addEventListener('submit', function(e) {
     e.preventDefault();
     const nome = document.getElementById('nome').value.trim();
@@ -124,42 +169,42 @@ document.addEventListener('DOMContentLoaded', function() {
     success ? showToast('Usuário cadastrado com sucesso!', 'success') 
             : showToast('Usuário já existe! Escolha outro.', 'danger');
 
-    if(success) registerForm.reset(); // Limpa formulário se sucesso
+    if(success) registerForm.reset();
   });
 
   // ----- Alternância entre formulários (login/cadastro) -----
-  const showRegister = document.getElementById('showRegister');
-  const showLogin = document.getElementById('showLogin');
-  const formTitle = document.getElementById('formTitle');
-
-  // Mostra formulário de cadastro e oculta login
   showRegister.addEventListener('click', () => {
-    loginForm.classList.add('d-none');
-    registerForm.classList.remove('d-none');
-    formTitle.textContent = 'Cadastro de Usuário';
+    loginSection.classList.add('d-none');
+    registerSection.classList.remove('d-none');
+    clientesSection.classList.add('d-none');
+    configSection.classList.add('d-none');
   });
 
-  // Mostra formulário de login e oculta cadastro
   showLogin.addEventListener('click', () => {
-    registerForm.classList.add('d-none');
-    loginForm.classList.remove('d-none');
-    formTitle.textContent = 'Login';
+    registerSection.classList.add('d-none');
+    loginSection.classList.remove('d-none');
+    clientesSection.classList.add('d-none');
+    configSection.classList.add('d-none');
   });
 
   // ----- Configurações / Upload JSON -----
-  const showConfig = document.getElementById('showConfig'); // botão para abrir config
-  const closeConfig = document.getElementById('closeConfig'); // botão para fechar config
-  const configForm = document.getElementById('configForm'); // formulário de upload
-  const jsonFileInput = document.getElementById('jsonFile'); // input de arquivo JSON
+  const showConfig = document.getElementById('showConfig');
+  const closeConfig = document.getElementById('closeConfig');
+  const jsonFileInput = document.getElementById('jsonFile');
 
-  // Mostra formulário de configuração
-  showConfig.addEventListener('click', () => configForm.classList.remove('d-none'));
+  showConfig.addEventListener('click', () => {
+    configSection.classList.remove('d-none');
+    loginSection.classList.add('d-none');
+    registerSection.classList.add('d-none');
+    clientesSection.classList.add('d-none');
+  });
 
-  // Fecha formulário de configuração
-  closeConfig.addEventListener('click', () => configForm.classList.add('d-none'));
+  closeConfig.addEventListener('click', () => {
+    configSection.classList.add('d-none');
+    loginSection.classList.remove('d-none');
+  });
 
-  // Evento de upload e atualização do banco a partir do JSON
-  configForm.addEventListener('submit', function(e) {
+  configSection.addEventListener('submit', function(e) {
     e.preventDefault();
     const file = jsonFileInput.files[0];
     if(!file) return showToast('Nenhum arquivo selecionado!', 'danger');
@@ -167,11 +212,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const reader = new FileReader();
     reader.onload = function(event) {
       try {
-        const data = JSON.parse(event.target.result); // transforma JSON em objeto
-        loadJSONToDB(data); // atualiza banco
+        const data = JSON.parse(event.target.result);
+        loadJSONToDB(data);
         showToast('Banco carregado com sucesso!', 'success');
         configForm.reset();
-        configForm.classList.add('d-none'); // fecha o formulário após upload
+        configSection.classList.add('d-none');
+        loginSection.classList.remove('d-none');
       } catch (err) {
         console.error(err);
         showToast('Erro ao processar arquivo JSON!', 'danger');
