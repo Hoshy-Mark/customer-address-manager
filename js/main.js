@@ -1,275 +1,238 @@
-// js/main.js
-import { initDB, exportDB, loadJSONToDB } from './db.js';
-import { loginUser, registerUser } from './auth.js';
-import { showToast } from './ui.js';
-import { renderClientes, saveCliente, resetEditingCliente } from './clientes.js';
-import { renderEnderecos, renderClientesSelect, saveEndereco, resetEditingEndereco } from './enderecos.js';
+import { initDB, exportDB, loadJSONToDB } from "./db.js";
+import { loginUser, registerUser } from "./auth.js";
+import { showToast } from "./ui.js";
+import {
+  renderClientes,
+  saveCliente,
+  resetEditingCliente,
+} from "./clientes.js";
+import {
+  renderEnderecos,
+  renderClientesSelect,
+  saveEndereco,
+  resetEditingEndereco,
+} from "./enderecos.js";
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
+  // ----- Inicialização do banco -----
   initDB();
 
-  // ----- Referências das seções -----
-  const loginSection = document.getElementById('loginSection');
-  const registerSection = document.getElementById('registerSection');
-  const clientesSection = document.getElementById('clientesSection');
-  const configSection = document.getElementById('configSection');
-  const configForm = document.getElementById('configForm'); 
+  // ----- Mapear seções e formulários -----
+  const sections = {
+    login: document.getElementById("loginSection"),
+    register: document.getElementById("registerSection"),
+    clientes: document.getElementById("clientesSection"),
+    config: document.getElementById("configSection"),
+    enderecos: document.getElementById("enderecosSection"),
+    enderecoForm: document.getElementById("enderecoFormSection"),
+    clienteForm: document.getElementById("clienteFormSection"),
+  };
 
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-  const showRegister = document.getElementById('showRegister');
-  const showLogin = document.getElementById('showLogin');
+  const forms = {
+    login: document.getElementById("loginForm"),
+    register: document.getElementById("registerForm"),
+    config: document.getElementById("configForm"),
+    endereco: document.getElementById("enderecoForm"),
+    cliente: document.getElementById("clienteForm"),
+  };
 
-  const enderecosSection = document.getElementById('enderecosSection');
-  const enderecoFormSection = document.getElementById('enderecoFormSection');
-  const showEnderecoForm = document.getElementById('showEnderecoForm');
-  const voltarClientesBtn = document.getElementById('voltarClientesBtn');
-  const enderecoForm = document.getElementById('enderecoForm');
-  const cancelarEndereco = document.getElementById('cancelarEndereco');
+  const buttons = {
+    showRegister: document.getElementById("showRegister"),
+    showLogin: document.getElementById("showLogin"),
+    showConfig: document.getElementById("showConfig"),
+    closeConfig: document.getElementById("closeConfig"),
+    exportDb: document.getElementById("exportDbBtn"),
+    showEnderecoForm: document.getElementById("showEnderecoForm"),
+    voltarClientes: document.getElementById("voltarClientesBtn"),
+    showClienteForm: document.getElementById("showClienteForm"),
+    cancelarEndereco: document.getElementById("cancelarEndereco"),
+    cancelarCliente: document.getElementById("cancelarCliente"),
+    logout: document.getElementById("logoutBtn"),
+  };
 
-  const clienteFormSection = document.getElementById('clienteFormSection');
-  const clienteForm = document.getElementById('clienteForm');
-  const showClienteForm = document.getElementById('showClienteForm');
-  const cancelarCliente = document.getElementById('cancelarCliente');
+  const inputs = {
+    usuario: document.getElementById("usuario"),
+    senha: document.getElementById("senha"),
+    novoUsuario: document.getElementById("novoUsuario"),
+    novaSenha: document.getElementById("novaSenha"),
+    nome: document.getElementById("nome"),
+    clienteNome: document.getElementById("clienteNome"),
+    clienteCpf: document.getElementById("clienteCpf"),
+    clienteDataNascimento: document.getElementById("clienteDataNascimento"),
+    clienteTelefone: document.getElementById("clienteTelefone"),
+    clienteCelular: document.getElementById("clienteCelular"),
+    selectCliente: document.getElementById("selectCliente"),
+    enderecoCep: document.getElementById("enderecoCep"),
+    jsonFile: document.getElementById("jsonFile"),
+  };
+
+  // ----- Funções utilitárias -----
+  const showSection = (sectionKey) => {
+    Object.values(sections).forEach((sec) => sec.classList.add("d-none"));
+    if (sectionKey) sections[sectionKey].classList.remove("d-none");
+  };
+
+  const attachEnderecoButtons = () => {
+    document
+      .querySelectorAll(".viewEnderecosBtn")
+      .forEach((btn) =>
+        btn.addEventListener("click", () =>
+          openEnderecos(Number(btn.dataset.id))
+        )
+      );
+  };
 
   // ----- Endereços -----
-  function openEnderecos(clienteId) {
-    renderClientesSelect(); 
-    document.getElementById('selectCliente').value = clienteId;
+  const openEnderecos = (clienteId) => {
+    renderClientesSelect();
+    inputs.selectCliente.value = clienteId;
     renderEnderecos();
+    showSection("enderecos");
+  };
 
-    enderecosSection.classList.remove('d-none');
-    clientesSection.classList.add('d-none');
-  }
+  buttons.voltarClientes.addEventListener("click", () =>
+    showSection("clientes")
+  );
+  inputs.selectCliente.addEventListener("change", renderEnderecos);
 
-  function attachEnderecoButtons() {
-    document.querySelectorAll('.viewEnderecosBtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const clienteId = Number(btn.dataset.id);
-        openEnderecos(clienteId);
-      });
-    });
-  }
-
-  voltarClientesBtn.addEventListener('click', () => {
-    enderecosSection.classList.add('d-none');
-    clientesSection.classList.remove('d-none');
-  });
-
-  document.getElementById('selectCliente').addEventListener('change', renderEnderecos);
-
-  // Eventos do formulário de endereços
-  enderecoForm.addEventListener('submit', saveEndereco);
-  showEnderecoForm.addEventListener('click', () => {
+  forms.endereco.addEventListener("submit", saveEndereco);
+  buttons.showEnderecoForm.addEventListener("click", () => {
     resetEditingEndereco();
-    enderecoFormSection.classList.remove('d-none');
-    enderecosSection.classList.add('d-none');
+    showSection("enderecoForm");
   });
-  cancelarEndereco.addEventListener('click', () => {
-    resetEditingEndereco();
-    enderecoFormSection.classList.add('d-none');
-    enderecosSection.classList.remove('d-none');
-  });
+  buttons.cancelarEndereco.addEventListener("click", () =>
+    showSection("enderecos")
+  );
 
   // ----- Logout -----
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    clientesSection.classList.add('d-none');
-    clienteFormSection.classList.add('d-none');
-    enderecosSection.classList.add('d-none');
-    enderecoFormSection.classList.add('d-none');
-    configSection.classList.add('d-none');
-
-    loginSection.classList.remove('d-none');
-
-    document.getElementById('usuario').value = '';
-    document.getElementById('senha').value = '';
+  buttons.logout.addEventListener("click", () => {
+    showSection("login");
+    inputs.usuario.value = "";
+    inputs.senha.value = "";
   });
-  
-  // ----- Exportar DB -----
-  document.getElementById('exportDbBtn').addEventListener('click', exportDB);
+
+  // ----- Exportar banco -----
+  buttons.exportDb.addEventListener("click", exportDB);
 
   // ----- Login -----
-  loginForm.addEventListener('submit', function(e) {
+  forms.login.addEventListener("submit", (e) => {
     e.preventDefault();
-    const usuario = document.getElementById('usuario').value.trim();
-    const senha = document.getElementById('senha').value.trim();
-    const user = loginUser(usuario, senha);
-
-    if(user) {
-      showToast(`Bem-vindo(a), ${user.nome}!`, 'success');
-
-      clientesSection.classList.remove('d-none');
-      loginSection.classList.add('d-none');
-      registerSection.classList.add('d-none');
-      configSection.classList.add('d-none');
-
+    const user = loginUser(
+      inputs.usuario.value.trim(),
+      inputs.senha.value.trim()
+    );
+    if (user) {
+      showToast(`Bem-vindo(a), ${user.nome}!`, "success");
+      showSection("clientes");
       renderClientes();
       attachEnderecoButtons();
     } else {
-      showToast('Usuário ou senha inválidos!', 'danger');
+      showToast("Usuário ou senha inválidos!", "danger");
     }
   });
 
-  // ----- Cadastro -----
-  registerForm.addEventListener('submit', function(e) {
+  // ----- Cadastro de usuário -----
+  forms.register.addEventListener("submit", (e) => {
     e.preventDefault();
-    const nome = document.getElementById('nome').value.trim();
-    const usuario = document.getElementById('novoUsuario').value.trim();
-    const senha = document.getElementById('novaSenha').value.trim();
-
-    const success = registerUser(nome, usuario, senha);
-    success ? showToast('Usuário cadastrado com sucesso!', 'success') 
-            : showToast('Usuário já existe! Escolha outro.', 'danger');
-
-    if(success) registerForm.reset();
+    const success = registerUser(
+      inputs.nome.value.trim(),
+      inputs.novoUsuario.value.trim(),
+      inputs.novaSenha.value.trim()
+    );
+    showToast(
+      success ? "Usuário cadastrado com sucesso!" : "Usuário já existe!",
+      success ? "success" : "danger"
+    );
+    if (success) forms.register.reset();
   });
 
-  // ----- Alternância entre formulários (login/cadastro) -----
-  showRegister.addEventListener('click', () => {
-    loginSection.classList.add('d-none');
-    registerSection.classList.remove('d-none');
-    clientesSection.classList.add('d-none');
-    configSection.classList.add('d-none');
-  });
-
-  const showConfigRegister = document.getElementById('showConfigRegister');
-  showConfigRegister.addEventListener('click', () => {
-    configSection.classList.remove('d-none');
-    loginSection.classList.add('d-none');
-    registerSection.classList.add('d-none');
-    clientesSection.classList.add('d-none');
-  });
-  
-  showLogin.addEventListener('click', () => {
-    registerSection.classList.add('d-none');
-    loginSection.classList.remove('d-none');
-    clientesSection.classList.add('d-none');
-    configSection.classList.add('d-none');
-  });
+  // ----- Alternância de telas -----
+  buttons.showRegister.addEventListener("click", () => showSection("register"));
+  buttons.showLogin.addEventListener("click", () => showSection("login"));
+  buttons.showConfig.addEventListener("click", () => showSection("config"));
+  buttons.closeConfig.addEventListener("click", () => showSection("login"));
 
   // ----- Configurações / Upload JSON -----
-  const showConfig = document.getElementById('showConfig');
-  const closeConfig = document.getElementById('closeConfig');
-  const jsonFileInput = document.getElementById('jsonFile');
-
-  showConfig.addEventListener('click', () => {
-    configSection.classList.remove('d-none');
-    loginSection.classList.add('d-none');
-    registerSection.classList.add('d-none');
-    clientesSection.classList.add('d-none');
-  });
-
-  closeConfig.addEventListener('click', () => {
-    configSection.classList.add('d-none');
-    loginSection.classList.remove('d-none');
-  });
-
-  configSection.addEventListener('submit', function(e) {
+  forms.config.addEventListener("submit", (e) => {
     e.preventDefault();
-    const file = jsonFileInput.files[0];
-    if(!file) return showToast('Nenhum arquivo selecionado!', 'danger');
+    const file = inputs.jsonFile.files[0];
+    if (!file) return showToast("Nenhum arquivo selecionado!", "danger");
 
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = (event) => {
       try {
-        const data = JSON.parse(event.target.result);
-        loadJSONToDB(data);
-        showToast('Banco carregado com sucesso!', 'success');
-        configForm.reset();
-        configSection.classList.add('d-none');
-        loginSection.classList.remove('d-none');
+        loadJSONToDB(JSON.parse(event.target.result));
+        showToast("Banco carregado com sucesso!", "success");
+        forms.config.reset();
+        showSection("login");
       } catch (err) {
         console.error(err);
-        showToast('Erro ao processar arquivo JSON!', 'danger');
+        showToast("Erro ao processar arquivo JSON!", "danger");
       }
     };
     reader.readAsText(file);
   });
 
-  // ----- Cadastro / Edição de Clientes -----
-  showClienteForm.addEventListener('click', () => {
+  // ----- Cadastro / Edição de clientes -----
+  buttons.showClienteForm.addEventListener("click", () => {
     resetEditingCliente();
-    clienteFormSection.classList.remove('d-none');
-    clientesSection.classList.add('d-none');
+    showSection("clienteForm");
   });
 
-  cancelarCliente.addEventListener('click', () => {
-    resetEditingCliente();
-    clienteForm.reset();
-    clienteFormSection.classList.add('d-none');
-    clientesSection.classList.remove('d-none');
-  });
+  buttons.cancelarCliente.addEventListener("click", () =>
+    showSection("clientes")
+  );
 
-  clienteForm.addEventListener('submit', (e) => {
+  forms.cliente.addEventListener("submit", (e) => {
     e.preventDefault();
+    const clienteData = {
+      nome: inputs.clienteNome.value.trim(),
+      cpf: inputs.clienteCpf.value.trim(),
+      dataNascimento: inputs.clienteDataNascimento.value,
+      telefone: inputs.clienteTelefone.value.trim(),
+      celular: inputs.clienteCelular.value.trim(),
+    };
 
-    const nome = document.getElementById('clienteNome').value.trim();
-    const cpf = document.getElementById('clienteCpf').value.trim();
-    const dataNascimento = document.getElementById('clienteDataNascimento').value;
-    const telefone = document.getElementById('clienteTelefone').value.trim();
-    const celular = document.getElementById('clienteCelular').value.trim();
-
-    if (!nome || !cpf || !dataNascimento || !telefone || !celular) {
-      return showToast('Todos os campos são obrigatórios!', 'danger');
+    if (Object.values(clienteData).some((v) => !v)) {
+      return showToast("Todos os campos são obrigatórios!", "danger");
     }
 
-    const success = saveCliente({ nome, cpf, dataNascimento, telefone, celular });
-    if (!success) return;
-
-    resetEditingCliente();
-    clienteForm.reset();
-    renderClientes();
-    attachEnderecoButtons();
-    clienteFormSection.classList.add('d-none');
-    clientesSection.classList.remove('d-none');
+    if (saveCliente(clienteData)) {
+      resetEditingCliente();
+      forms.cliente.reset();
+      renderClientes();
+      attachEnderecoButtons();
+      showSection("clientes");
+    }
   });
 
-  //----- Máscaras -----
-  function maskCPF(input) {
-    input.addEventListener('input', function() {
-      let value = input.value.replace(/\D/g, '');
-      if (value.length > 11) value = value.slice(0, 11);
-      value = value.replace(/(\d{3})(\d)/, '$1.$2');
-      value = value.replace(/(\d{3})(\d)/, '$1.$2');
-      value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  // ----- Máscaras de input -----
+  const maskInput = (input, pattern, maxLength) => {
+    input.addEventListener("input", () => {
+      let value = input.value.replace(/\D/g, "").slice(0, maxLength);
+      pattern.forEach((p) => (value = value.replace(p.regex, p.repl)));
       input.value = value;
     });
-  }
+  };
 
-  function maskTelefone(input) {
-    input.addEventListener('input', function() {
-      let value = input.value.replace(/\D/g, '');
-      if (value.length > 8) value = value.slice(0, 8);
-      value = value.replace(/(\d{4})(\d)/, '$1-$2');
-      input.value = value;
-    });
-  }
-
-  function maskCelular(input) {
-    input.addEventListener('input', function() {
-      let value = input.value.replace(/\D/g, '');
-      if (value.length > 9) value = value.slice(0, 9);
-      value = value.replace(/(\d{5})(\d)/, '$1-$2');
-      input.value = value;
-    });
-  }
-
-  function maskCEP(input) {
-    input.addEventListener('input', function() {
-      let value = input.value.replace(/\D/g, '');
-      if (value.length > 8) value = value.slice(0, 8);
-      value = value.replace(/(\d{5})(\d)/, '$1-$2');
-      input.value = value;
-    });
-  }
-
-  const cpfInput = document.getElementById('clienteCpf');
-  const telefoneInput = document.getElementById('clienteTelefone');
-  const celularInput = document.getElementById('clienteCelular');
-  const cepInput = document.getElementById('enderecoCep');
-
-  maskCPF(cpfInput);
-  maskTelefone(telefoneInput);
-  maskCelular(celularInput);
-  maskCEP(cepInput);
+  maskInput(
+    inputs.clienteCpf,
+    [
+      { regex: /(\d{3})(\d)/, repl: "$1.$2" },
+      { regex: /(\d{3})(\d)/, repl: "$1.$2" },
+      { regex: /(\d{3})(\d{1,2})$/, repl: "$1-$2" },
+    ],
+    11
+  );
+  maskInput(
+    inputs.clienteTelefone,
+    [{ regex: /(\d{4})(\d)/, repl: "$1-$2" }],
+    8
+  );
+  maskInput(
+    inputs.clienteCelular,
+    [{ regex: /(\d{5})(\d)/, repl: "$1-$2" }],
+    9
+  );
+  maskInput(inputs.enderecoCep, [{ regex: /(\d{5})(\d)/, repl: "$1-$2" }], 8);
 });

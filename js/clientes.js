@@ -1,14 +1,16 @@
-// js/clientes.js
 import { showToast, showConfirmToast } from "./ui.js";
 
-let editingClienteId = null;
+let editingClienteId = null; // Armazena o ID do cliente que está sendo editado (null = nenhum)
 
-// Renderiza a tabela de clientes
+// ----- Renderiza a tabela de clientes -----
+// Busca os clientes no banco (alasql) e insere as linhas na tabela HTML.
+// Também adiciona os eventos de editar e excluir em cada botão.
 export function renderClientes() {
-  const clientes = alasql("SELECT * FROM clientes");
+  const clientes = alasql("SELECT * FROM clientes"); // Busca todos os clientes
   const tbody = document.querySelector("#clientesTable tbody");
-  tbody.innerHTML = "";
+  tbody.innerHTML = ""; // Limpa conteúdo da tabela
 
+  // Cria uma linha (<tr>) para cada cliente
   clientes.forEach((c) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -27,16 +29,24 @@ export function renderClientes() {
     tbody.appendChild(tr);
   });
 
-  document.querySelectorAll(".editClienteBtn").forEach((btn) =>
-    btn.addEventListener("click", () => startEditCliente(Number(btn.dataset.id)))
-  );
+  // Adiciona eventos aos botões de editar
+  document
+    .querySelectorAll(".editClienteBtn")
+    .forEach((btn) =>
+      btn.addEventListener("click", () =>
+        startEditCliente(Number(btn.dataset.id))
+      )
+    );
 
-  document.querySelectorAll(".deleteClienteBtn").forEach((btn) =>
-    btn.addEventListener("click", () => deleteCliente(Number(btn.dataset.id)))
-  );
+  // Adiciona eventos aos botões de excluir
+  document
+    .querySelectorAll(".deleteClienteBtn")
+    .forEach((btn) =>
+      btn.addEventListener("click", () => deleteCliente(Number(btn.dataset.id)))
+    );
 }
 
-// Cadastra um novo cliente
+//----- Cadastra um novo cliente -----
 export function registerCliente(nome, cpf, dataNascimento, telefone, celular) {
   if (alasql("SELECT * FROM clientes WHERE cpf=?", [cpf]).length) {
     return { success: false, message: "CPF já cadastrado!" };
@@ -48,34 +58,37 @@ export function registerCliente(nome, cpf, dataNascimento, telefone, celular) {
   return { success: true, message: "Cliente cadastrado com sucesso!" };
 }
 
-// Inicia edição de cliente
+// ----- Inicia edição de cliente -----
 export function startEditCliente(id) {
   const cliente = alasql("SELECT * FROM clientes WHERE id = ?", [id])[0];
   if (!cliente) return showToast("Cliente não encontrado!", "danger");
 
-  editingClienteId = id;
+  editingClienteId = id; // Marca o cliente que está sendo editado
 
-  // Preenche o formulário com os dados do cliente
+  // Preenche os campos do formulário com os dados do cliente
   document.getElementById("clienteNome").value = cliente.nome;
   document.getElementById("clienteCpf").value = cliente.cpf;
-  document.getElementById("clienteDataNascimento").value = cliente.dataNascimento;
+  document.getElementById("clienteDataNascimento").value =
+    cliente.dataNascimento;
   document.getElementById("clienteTelefone").value = cliente.telefone;
   document.getElementById("clienteCelular").value = cliente.celular;
 
+  // Mostra a seção do formulário e esconde a lista de clientes
   document.getElementById("clienteFormSection").classList.remove("d-none");
   document.getElementById("clientesSection").classList.add("d-none");
 }
 
-// Salva cliente (novo ou editado)
+// ----- Salva cliente (novo ou editado) -----
 export function saveCliente({ nome, cpf, dataNascimento, telefone, celular }) {
   if (editingClienteId) {
+    // Atualização de cliente existente
     try {
       alasql(
         "UPDATE clientes SET nome=?, cpf=?, dataNascimento=?, telefone=?, celular=? WHERE id=?",
         [nome, cpf, dataNascimento, telefone, celular, editingClienteId]
       );
       showToast("Cliente atualizado com sucesso!", "success");
-      editingClienteId = null;
+      editingClienteId = null; // Reseta estado de edição
       return true;
     } catch (err) {
       console.error(err);
@@ -83,23 +96,30 @@ export function saveCliente({ nome, cpf, dataNascimento, telefone, celular }) {
       return false;
     }
   } else {
-    const result = registerCliente(nome, cpf, dataNascimento, telefone, celular);
+    // Cadastro de novo cliente
+    const result = registerCliente(
+      nome,
+      cpf,
+      dataNascimento,
+      telefone,
+      celular
+    );
     showToast(result.message, result.success ? "success" : "danger");
     return result.success;
   }
 }
 
-// Reseta estado de edição e limpa formulário
+//----- Reseta estado de edição e limpa formulário -----
 export function resetEditingCliente() {
   editingClienteId = null;
   document.getElementById("clienteForm").reset();
 }
 
-// Exclui cliente
+// ----- Exclui cliente -----
 export function deleteCliente(id) {
   showConfirmToast("Deseja realmente excluir este cliente?", () => {
     alasql("DELETE FROM clientes WHERE id=?", [id]);
     showToast("Cliente excluído!", "success");
-    renderClientes();
+    renderClientes(); // Recarrega a tabela após exclusão
   });
 }
