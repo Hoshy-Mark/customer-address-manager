@@ -21,9 +21,11 @@ export function renderClientes() {
       <td>${c.telefone}</td>
       <td>${c.celular}</td>
       <td>
-        <button class="btn btn-sm btn-primary viewEnderecosBtn" data-id="${c.id}">Endereços</button>
-        <button class="btn btn-sm btn-warning editClienteBtn" data-id="${c.id}">Editar</button>
-        <button class="btn btn-sm btn-danger deleteClienteBtn" data-id="${c.id}">Excluir</button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-primary viewEnderecosBtn" data-id="${c.id}">Endereços</button>
+          <button class="btn btn-sm btn-warning editClienteBtn" data-id="${c.id}">Editar</button>
+          <button class="btn btn-sm btn-danger deleteClienteBtn" data-id="${c.id}">Excluir</button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);

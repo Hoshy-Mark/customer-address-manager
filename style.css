@@ -1,5 +1,4 @@
-/* RESET E BASE                  */
-
+/* RESET E BASE */
 * {
   margin: 0;
   padding: 0;
@@ -13,33 +12,39 @@ body {
   line-height: 1.5;
 }
 
+/* NAVBAR */
+.navbar {
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
 
-/* CONTAINER                     */
+.navbar-brand {
+  font-weight: 600;
+  color: #1f2937;
+}
 
-.container {
+.navbar button {
+  min-width: 100px;
+}
+
+/* CONTAINER / SEÇÕES */
+.container, section {
+  width: 100%;
   max-width: 960px;
   margin: 2rem auto;
-  padding: 1.5rem;
+  padding: 1rem; /* padding menor para mobile */
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0,0,0,0.05);
 }
 
-
-/* TÍTULOS                       */
-
-h1, h2, h3 {
-  margin-bottom: 1rem;
-  color: #1f2937;
-}
-
-
-/* FORMULÁRIOS                   */
-
+/* FORMULÁRIOS */
 form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 input, select, textarea {
@@ -48,6 +53,7 @@ input, select, textarea {
   border: 1px solid #d1d5db;
   font-size: 1rem;
   transition: 0.2s;
+  width: 100%;
 }
 
 input:focus, select:focus, textarea:focus {
@@ -56,36 +62,73 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
 }
 
+input:invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220,38,38,0.2);
+}
 
-/* BOTÕES                         */
+/* Toggle switch para checkbox principal */
+.form-switch .form-check-input {
+  width: 2.5em;
+  height: 1.5em;
+  margin-left: 0;
+}
 
+/* BOTÕES */
 button {
   cursor: pointer;
-  background-color: #2563eb;
-  color: #fff;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 8px;
   transition: 0.2s;
 }
 
-button:hover {
+/* Primário */
+.btn-primary {
+  background-color: #2563eb;
+  color: #fff;
+}
+.btn-primary:hover {
   background-color: #1e40af;
 }
 
-button:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
+/* Sucesso */
+.btn-success {
+  background-color: #16a34a;
+  color: #fff;
+}
+.btn-success:hover {
+  background-color: #15803d;
 }
 
-/* Botões de ação pequenos */
+/* Secundário */
+.btn-secondary {
+  background-color: #6b7280;
+  color: #fff;
+}
+.btn-secondary:hover {
+  background-color: #4b5563;
+}
+
+/* Alerta / Excluir */
+.btn-danger {
+  background-color: #dc2626;
+  color: #fff;
+}
+.btn-danger:hover {
+  background-color: #b91c1c;
+}
+
+/* Pequenos */
 .btn-sm {
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
 }
 
-
-/* TABELAS                        */
+/* TABELAS */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
 
 table {
   width: 100%;
@@ -94,7 +137,7 @@ table {
 }
 
 th, td {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid #e5e7eb;
   text-align: left;
 }
@@ -107,77 +150,61 @@ tr:nth-child(even) {
   background-color: #f9fafb;
 }
 
+table tbody tr:hover {
+  background-color: #e0f2fe;
+}
 
-/* SEÇÕES                         */
 
+/* SEÇÕES / SPACING */
 section {
-  padding: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-/* TOASTS                         */
-
+/* TOASTS */
 #toastContainer {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 9999;
+  max-width: 300px;
+  width: 100%;
 }
-
-
-/* RESPONSIVO MOBILE */
-
-@media (max-width: 768px) {
-  .container {
-    margin: 1rem;
-    padding: 1rem;
-  }
-
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-
-  th, td {
-    padding: 0.5rem;
-  }
-
-  tr {
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #e5e7eb;
-  }
-
-  td {
-    text-align: right;
-    padding-left: 50%;
-    position: relative;
-  }
-
-  td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 0;
-    width: 50%;
-    padding-left: 1rem;
-    font-weight: bold;
-    text-align: left;
-  }
-}
-
-
-/* MENSAGENS DE ERRO/INFO         */
 
 .toast {
   border-radius: 8px;
   font-size: 0.875rem;
 }
 
-
-/* LINKS E NAVEGAÇÃO              */
-
+/*  LINKS */
 a {
   color: #2563eb;
   text-decoration: none;
 }
-
 a:hover {
   text-decoration: underline;
+}
+
+/* RESPONSIVO MOBILE */
+@media (max-width: 768px) {
+  .container, section {
+    margin: 1rem;
+    padding: 0.75rem;
+  }
+
+  table th, table td {
+    padding: 0.35rem 0.5rem;
+  }
+}
+
+/* MENSAGENS DE ERRO / INFO */
+.toast-error {
+  background-color: #dc2626;
+  color: #fff;
+}
+
+.toast-success {
+  background-color: #16a34a;
+  color: #fff;
+}
+
+.toast-info {
+  background-color: #2563eb;
+  color: #fff;
 }

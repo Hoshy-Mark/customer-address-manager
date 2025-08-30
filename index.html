@@ -113,21 +113,25 @@
   <section id="clientesSection" class="d-none">
     <h2>Clientes Cadastrados</h2>
     <button id="showClienteForm" class="btn btn-primary mb-3">Cadastrar Cliente</button>
-    <table id="clientesTable" class="table table-striped">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nome</th>
-          <th>CPF</th>
-          <th>Data de Nascimento</th>
-          <th>Telefone</th>
-          <th>Celular</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
 
+    <div class="table-responsive">
+      <table id="clientesTable" class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Data de Nascimento</th>
+            <th>Telefone</th>
+            <th>Celular</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+  
   <!-- Tela de Cadastro de Clientes -->
   <section id="clienteFormSection" class="d-none">
     <h2>Cadastrar Cliente</h2>
@@ -172,23 +176,36 @@
     <button id="voltarClientesBtn" class="btn btn-secondary mb-3">Voltar para Clientes</button>
 
     <!-- Tabela de endereços -->
-    <table id="enderecosTable" class="table table-striped">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>CEP</th>
-          <th>Rua</th>
-          <th>Bairro</th>
-          <th>Cidade</th>
-          <th>Estado</th>
-          <th>País</th>
-          <th>Principal</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+    <section id="enderecosSection" class="d-none">
+      <h2>Endereços do Cliente</h2>
+      
+      <div class="mb-3">
+        <label for="selectCliente" class="form-label">Selecione o Cliente</label>
+        <select id="selectCliente" class="form-select"></select>
+      </div>
+
+      <button id="showEnderecoForm" class="btn btn-primary mb-3">Cadastrar Endereço</button>
+      <button id="voltarClientesBtn" class="btn btn-secondary mb-3">Voltar para Clientes</button>
+
+      <div class="table-responsive">
+        <table id="enderecosTable" class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>CEP</th>
+              <th>Rua</th>
+              <th>Bairro</th>
+              <th>Cidade</th>
+              <th>Estado</th>
+              <th>País</th>
+              <th>Principal</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
   <!-- Formulário de cadastro/edição de endereço -->
   <section id="enderecoFormSection" class="d-none">
@@ -228,9 +245,9 @@
   </section>
 
   <!-- Toast container -->
-  <div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">
-    <div id="toastContainer"></div>
-  </div>
+  
+  <div id="toastContainer" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index:1080;"></div>
+
 
   <!-- Scripts modularizados -->
   <script type="module" src="js/main.js"></script>

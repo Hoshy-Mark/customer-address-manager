@@ -51,7 +51,8 @@ Estrutura de pastas:
 project-root/
 │── index.html
 │── style.css
-│── INFO.txt
+│── db.JSON
+│── info.txt
 │── js/
 │    ├── main.js          (ponto de entrada, importa outros módulos)
 │    ├── auth.js          (login, logout, cadastro)
