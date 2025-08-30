@@ -225,4 +225,51 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     reader.readAsText(file);
   });
+
+  // ----- Cadastro de Clientes -----
+  const clienteFormSection = document.getElementById('clienteFormSection');
+  const clienteForm = document.getElementById('clienteForm');
+  const showClienteForm = document.getElementById('showClienteForm');
+  const cancelarCliente = document.getElementById('cancelarCliente');
+
+  // Mostrar formulário de cadastro e esconder lista
+  showClienteForm.addEventListener('click', () => {
+    clientesSection.classList.add('d-none');
+    clienteFormSection.classList.remove('d-none');
+  });
+
+  // Cancelar cadastro e voltar para lista
+  cancelarCliente.addEventListener('click', () => {
+    clienteForm.reset();
+    clienteFormSection.classList.add('d-none');
+    clientesSection.classList.remove('d-none');
+  });
+
+  // Salvar novo cliente
+  clienteForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const nome = document.getElementById('clienteNome').value.trim();
+    const cpf = document.getElementById('clienteCpf').value.trim();
+    const dataNascimento = document.getElementById('clienteDataNascimento').value;
+    const telefone = document.getElementById('clienteTelefone').value.trim();
+    const celular = document.getElementById('clienteCelular').value.trim();
+
+    if (!nome || !cpf || !dataNascimento || !telefone || !celular) {
+      return showToast('Todos os campos são obrigatórios!', 'danger');
+    }
+
+    alasql(
+      'INSERT INTO clientes (nome, cpf, dataNascimento, telefone, celular) VALUES (?, ?, ?, ?, ?)',
+      [nome, cpf, dataNascimento, telefone, celular]
+    );
+
+    showToast('Cliente cadastrado com sucesso!', 'success');
+
+    clienteForm.reset();
+    clienteFormSection.classList.add('d-none');
+    clientesSection.classList.remove('d-none');
+
+    renderClientes(); // Atualiza a tabela
+  });
 });
