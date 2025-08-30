@@ -116,34 +116,6 @@ document.getElementById('cancelarEndereco').addEventListener('click', () => {
 // Seleção de cliente altera tabela de endereços
 document.getElementById('selectCliente').addEventListener('change', renderEnderecos);
 
-// Salvar endereço
-document.getElementById('enderecoForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const clienteId = Number(document.getElementById('selectCliente').value);
-  const cep = document.getElementById('enderecoCep').value.trim();
-  const rua = document.getElementById('enderecoRua').value.trim();
-  const bairro = document.getElementById('enderecoBairro').value.trim();
-  const cidade = document.getElementById('enderecoCidade').value.trim();
-  const estado = document.getElementById('enderecoEstado').value.trim();
-  const pais = document.getElementById('enderecoPais').value.trim();
-  const principal = document.getElementById('enderecoPrincipal').checked;
-
-  if (editingEnderecoId) {
-    alasql('UPDATE enderecos SET cep=?, rua=?, bairro=?, cidade=?, estado=?, pais=?, principal=? WHERE id=?',
-      [cep, rua, bairro, cidade, estado, pais, principal, editingEnderecoId]);
-    showToast('Endereço atualizado com sucesso!');
-  } else {
-    alasql('INSERT INTO enderecos (clienteId, cep, rua, bairro, cidade, estado, pais, principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [clienteId, cep, rua, bairro, cidade, estado, pais, principal]);
-    showToast('Endereço cadastrado com sucesso!');
-  }
-
-  enderecoForm.reset();
-  enderecoFormSection.classList.add('d-none');
-  enderecosSection.classList.remove('d-none');
-  renderEnderecos();
-});
-
 // Editar endereço
 function editEndereco(id) {
   const endereco = alasql('SELECT * FROM enderecos WHERE id = ?', [id])[0];
@@ -162,10 +134,65 @@ function editEndereco(id) {
   enderecosSection.classList.add('d-none');
 }
 
+// Salvar edição do endereço (mantendo regra de principal)
+document.getElementById('enderecoForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const clienteId = Number(document.getElementById('selectCliente').value);
+  const cep = document.getElementById('enderecoCep').value.trim();
+  const rua = document.getElementById('enderecoRua').value.trim();
+  const bairro = document.getElementById('enderecoBairro').value.trim();
+  const cidade = document.getElementById('enderecoCidade').value.trim();
+  const estado = document.getElementById('enderecoEstado').value.trim();
+  const pais = document.getElementById('enderecoPais').value.trim();
+  let principal = document.getElementById('enderecoPrincipal').checked;
+
+  const enderecosCliente = alasql('SELECT * FROM enderecos WHERE clienteId = ?', [clienteId]);
+
+  if (editingEnderecoId) {
+    if (principal) {
+      // Se marcar como principal, desmarca os outros
+      alasql('UPDATE enderecos SET principal = false WHERE clienteId = ? AND id != ?', [clienteId, editingEnderecoId]);
+    } else {
+      // Se desmarcar o principal, garante que sempre tenha outro principal
+      const outroPrincipal = enderecosCliente.find(e => e.principal && e.id !== editingEnderecoId);
+      if (!outroPrincipal && enderecosCliente.length > 1) {
+        principal = true; // não permite remover o único principal se houver outro endereço
+      }
+    }
+
+    alasql('UPDATE enderecos SET cep=?, rua=?, bairro=?, cidade=?, estado=?, pais=?, principal=? WHERE id=?',
+      [cep, rua, bairro, cidade, estado, pais, principal, editingEnderecoId]);
+    showToast('Endereço atualizado com sucesso!');
+  } else {
+    if (enderecosCliente.length === 0) principal = true; // primeiro endereço sempre principal
+    else if (principal) alasql('UPDATE enderecos SET principal = false WHERE clienteId = ?', [clienteId]);
+
+    alasql('INSERT INTO enderecos (clienteId, cep, rua, bairro, cidade, estado, pais, principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [clienteId, cep, rua, bairro, cidade, estado, pais, principal]);
+    showToast('Endereço cadastrado com sucesso!');
+  }
+
+  enderecoForm.reset();
+  enderecoFormSection.classList.add('d-none');
+  enderecosSection.classList.remove('d-none');
+  renderEnderecos();
+});
+
 // Excluir endereço
 function deleteEndereco(id) {
   showConfirmToast('Deseja realmente excluir este endereço?', () => {
+    const endereco = alasql('SELECT * FROM enderecos WHERE id = ?', [id])[0];
+    const clienteId = endereco.clienteId;
     alasql('DELETE FROM enderecos WHERE id = ?', [id]);
+
+    // Se era principal e houver outros endereços, define o primeiro como principal
+    if (endereco.principal) {
+      const outros = alasql('SELECT * FROM enderecos WHERE clienteId = ?', [clienteId]);
+      if (outros.length > 0) {
+        alasql('UPDATE enderecos SET principal = true WHERE id = ?', [outros[0].id]);
+      }
+    }
+
     showToast('Endereço excluído com sucesso!');
     renderEnderecos();
   });
