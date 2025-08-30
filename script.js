@@ -93,20 +93,20 @@ function renderEnderecos() {
 
   enderecos.forEach(e => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${e.id}</td>
-      <td>${e.cep}</td>
-      <td>${e.rua}</td>
-      <td>${e.bairro}</td>
-      <td>${e.cidade}</td>
-      <td>${e.estado}</td>
-      <td>${e.pais}</td>
-      <td>${e.principal ? 'Sim' : 'Não'}</td>
-      <td>
-        <button class="btn btn-sm btn-warning editEnderecoBtn" data-id="${e.id}">Editar</button>
-        <button class="btn btn-sm btn-danger deleteEnderecoBtn" data-id="${e.id}">Excluir</button>
-      </td>
-    `;
+  tr.innerHTML = `
+    <td data-label="ID">${e.id}</td>
+    <td data-label="CEP">${e.cep}</td>
+    <td data-label="Rua">${e.rua}</td>
+    <td data-label="Bairro">${e.bairro}</td>
+    <td data-label="Cidade">${e.cidade}</td>
+    <td data-label="Estado">${e.estado}</td>
+    <td data-label="País">${e.pais}</td>
+    <td data-label="Principal">${e.principal ? 'Sim' : 'Não'}</td>
+    <td data-label="Ações">
+      <button class="btn btn-sm btn-warning editEnderecoBtn" data-id="${e.id}">Editar</button>
+      <button class="btn btn-sm btn-danger deleteEnderecoBtn" data-id="${e.id}">Excluir</button>
+    </td>
+  `;
     tbody.appendChild(tr);
   });
 
@@ -412,13 +412,13 @@ function renderClientes() {
   clientes.forEach(c => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${c.id}</td>
-      <td>${c.nome}</td>
-      <td>${c.cpf}</td>
-      <td>${c.dataNascimento}</td>
-      <td>${c.telefone}</td>
-      <td>${c.celular}</td>
-      <td>
+      <td data-label="ID">${c.id}</td>
+      <td data-label="Nome">${c.nome}</td>
+      <td data-label="CPF">${c.cpf}</td>
+      <td data-label="Nascimento">${c.dataNascimento}</td>
+      <td data-label="Telefone">${c.telefone}</td>
+      <td data-label="Celular">${c.celular}</td>
+      <td data-label="Ações">
         <button class="btn btn-sm btn-primary viewEnderecosBtn" data-id="${c.id}">Endereços</button>
         <button class="btn btn-sm btn-warning editClienteBtn" data-id="${c.id}">Editar</button>
         <button class="btn btn-sm btn-danger deleteClienteBtn" data-id="${c.id}">Excluir</button>
