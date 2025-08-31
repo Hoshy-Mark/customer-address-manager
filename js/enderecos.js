@@ -94,7 +94,6 @@ export function editEndereco(id) {
   document.getElementById("enderecoPais").value = endereco.pais;
   document.getElementById("enderecoPrincipal").checked = endereco.principal;
 
-  updateFieldColors();
   // Alterna visibilidade das seções
   document.getElementById("enderecoFormSection").classList.remove("d-none");
   document.getElementById("enderecosSection").classList.add("d-none");
@@ -193,25 +192,3 @@ export function saveEndereco(e) {
   document.getElementById("enderecosSection").classList.remove("d-none");
   renderEnderecos();
 }
-
-// Atualiza a cor dos campos conforme o valor
-function updateFieldColors() {
-  document.querySelectorAll('#enderecoForm input[required]').forEach(input => {
-    if(!input.value) {
-      input.style.borderColor = '#facc15'; // amarelo
-    } else if(!input.checkValidity()) {
-      input.style.borderColor = '#dc2626'; // vermelho
-    } else {
-      input.style.borderColor = '#16a34a'; // verde
-    }
-  });
-}
-
-// Atualiza em tempo real enquanto o usuário digita
-document.querySelectorAll('#enderecoForm input[required]').forEach(input => {
-  input.addEventListener('input', updateFieldColors);
-});
-
-// Inicializa as cores ao abrir o formulário
-document.getElementById('enderecoForm').addEventListener('reset', updateFieldColors);
-updateFieldColors();

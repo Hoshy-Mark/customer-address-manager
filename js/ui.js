@@ -82,3 +82,81 @@ export function showSection(sectionId) {
   // Exibe a seção solicitada
   document.getElementById(sectionId).classList.remove("d-none");
 }
+
+// --- Validação de campos com e sem formato ---
+export function setupFieldValidation(input, typeCheck = null) {
+  const updateColor = () => {
+    const value = input.value.trim();
+
+    // Antes de interação ou submit → neutro
+    if (!input.classList.contains("touched") && !input.dataset.submitError) {
+      input.style.borderColor = "transparent";
+      return;
+    }
+
+    if (!value) {
+      input.style.borderColor = input.dataset.submitError ? "#dc2626" : "#facc15";
+    } else if (typeCheck && !typeCheck(value)) {
+      input.style.borderColor = "#dc2626";
+    } else {
+      input.style.borderColor = "#16a34a";
+    }
+  };
+
+  input.addEventListener("input", () => {
+    input.classList.add("touched");
+    input.dataset.submitError = ""; // limpa erro de submit
+    updateColor();
+  });
+
+  input.addEventListener("blur", () => {
+    input.classList.add("touched");
+    updateColor();
+  });
+
+  // Inicial
+  updateColor();
+}
+
+// --- Formulário geral, campos obrigatórios ---
+export function setupFormValidation(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  form.querySelectorAll("input[required]").forEach((input) => {
+    const updateColor = () => {
+      if (input.dataset.submitError) {
+        input.style.borderColor = "#dc2626"; // vermelho de submit
+      } else if (!input.classList.contains("touched")) {
+        input.style.borderColor = "transparent"; // neutro antes da interação
+      } else {
+        input.style.borderColor = input.value ? "#16a34a" : "#facc15"; // verde ou amarelo
+      }
+    };
+
+    input.addEventListener("input", () => {
+      input.classList.add("touched");
+      input.dataset.submitError = "";
+      updateColor();
+    });
+
+    input.addEventListener("blur", () => {
+      input.classList.add("touched");
+      updateColor();
+    });
+  });
+
+  form.addEventListener("reset", () => {
+    form.querySelectorAll("input[required]").forEach((input) => {
+      input.style.borderColor = "transparent";
+      input.classList.remove("touched");
+      input.dataset.submitError = "";
+    });
+  });
+}
+
+// --- Funções de validação de formato ---
+export const validateCEP = (v) => /^\d{5}-\d{3}$/.test(v);
+export const validateCPF = (v) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v);
+export const validateTelefone = (v) => /^\d{4}-\d{4}$/.test(v);
+export const validateCelular = (v) => /^\d{5}-\d{4}$/.test(v);

@@ -1,6 +1,14 @@
 import { initDB, exportDB, loadJSONToDB } from "./db.js";
 import { loginUser, registerUser } from "./auth.js";
-import { showToast } from "./ui.js";
+import {
+  showToast,
+  setupFormValidation,
+  setupFieldValidation,
+  validateCEP,
+  validateCPF,
+  validateTelefone,
+  validateCelular,
+} from "./ui.js";
 import {
   renderClientes,
   saveCliente,
@@ -63,6 +71,11 @@ document.addEventListener("DOMContentLoaded", () => {
     clienteCelular: document.getElementById("clienteCelular"),
     selectCliente: document.getElementById("selectCliente"),
     enderecoCep: document.getElementById("enderecoCep"),
+    enderecoRua: document.getElementById("enderecoRua"),
+    enderecoBairro: document.getElementById("enderecoBairro"),
+    enderecoCidade: document.getElementById("enderecoCidade"),
+    enderecoEstado: document.getElementById("enderecoEstado"),
+    enderecoPais: document.getElementById("enderecoPais"),
     jsonFile: document.getElementById("jsonFile"),
   };
 
@@ -82,7 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
   };
 
-  // ----- Endereços -----
   const openEnderecos = (clienteId) => {
     renderClientesSelect();
     inputs.selectCliente.value = clienteId;
@@ -90,12 +102,33 @@ document.addEventListener("DOMContentLoaded", () => {
     showSection("enderecos");
   };
 
+  // ----- Eventos globais -----
   buttons.voltarClientes.addEventListener("click", () =>
     showSection("clientes")
   );
   inputs.selectCliente.addEventListener("change", renderEnderecos);
 
-  forms.endereco.addEventListener("submit", saveEndereco);
+  buttons.logout.addEventListener("click", () => {
+    showSection("login");
+    inputs.usuario.value = "";
+    inputs.senha.value = "";
+  });
+
+  buttons.exportDb.addEventListener("click", exportDB);
+
+  buttons.showRegister.addEventListener("click", () => showSection("register"));
+  buttons.showLogin.addEventListener("click", () => showSection("login"));
+  buttons.showConfig.addEventListener("click", () => showSection("config"));
+  buttons.closeConfig.addEventListener("click", () => showSection("login"));
+
+  buttons.showClienteForm.addEventListener("click", () => {
+    resetEditingCliente();
+    showSection("clienteForm");
+  });
+
+  buttons.cancelarCliente.addEventListener("click", () =>
+    showSection("clientes")
+  );
   buttons.showEnderecoForm.addEventListener("click", () => {
     resetEditingEndereco();
     showSection("enderecoForm");
@@ -104,33 +137,53 @@ document.addEventListener("DOMContentLoaded", () => {
     showSection("enderecos")
   );
 
-  // ----- Logout -----
-  buttons.logout.addEventListener("click", () => {
-    showSection("login");
-    inputs.usuario.value = "";
-    inputs.senha.value = "";
-  });
-
-  // ----- Exportar banco -----
-  buttons.exportDb.addEventListener("click", exportDB);
-
   // ----- Login -----
   forms.login.addEventListener("submit", (e) => {
     e.preventDefault();
-    const user = loginUser(
-      inputs.usuario.value.trim(),
-      inputs.senha.value.trim()
-    );
+    const username = inputs.usuario.value.trim();
+    const password = inputs.senha.value.trim();
+
+    const user = loginUser(username, password);
+
     if (user) {
       showToast(`Bem-vindo(a), ${user.nome}!`, "success");
       showSection("clientes");
       renderClientes();
       attachEnderecoButtons();
+      // reseta bordas do login
+      inputs.usuario.dataset.submitError = "";
+      inputs.senha.dataset.submitError = "";
+      inputs.usuario.classList.add("touched");
+      inputs.senha.classList.add("touched");
+      inputs.usuario.style.borderColor = "#16a34a";
+      inputs.senha.style.borderColor = "#16a34a";
     } else {
       showToast("Usuário ou senha inválidos!", "danger");
+      // marca erro de submit nos dois campos
+      inputs.usuario.dataset.submitError = "true";
+      inputs.senha.dataset.submitError = "true";
+      inputs.usuario.classList.add("touched");
+      inputs.senha.classList.add("touched");
+      inputs.usuario.style.borderColor = "#dc2626";
+      inputs.senha.style.borderColor = "#dc2626";
     }
   });
 
+  // coloca ambos verde se estiverem preenchidos após ser invalido e haver mudança
+  [inputs.usuario, inputs.senha].forEach((input) => {
+    input.addEventListener("input", () => {
+      const username = inputs.usuario.value.trim();
+      const password = inputs.senha.value.trim();
+
+      // se houver valores nos dois campos, mostra verde
+      if (username && password) {
+        inputs.usuario.dataset.submitError = "";
+        inputs.senha.dataset.submitError = "";
+        inputs.usuario.style.borderColor = "#16a34a";
+        inputs.senha.style.borderColor = "#16a34a";
+      }
+    });
+  });
   // ----- Cadastro de usuário -----
   forms.register.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -145,12 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     if (success) forms.register.reset();
   });
-
-  // ----- Alternância de telas -----
-  buttons.showRegister.addEventListener("click", () => showSection("register"));
-  buttons.showLogin.addEventListener("click", () => showSection("login"));
-  buttons.showConfig.addEventListener("click", () => showSection("config"));
-  buttons.closeConfig.addEventListener("click", () => showSection("login"));
 
   // ----- Configurações / Upload JSON -----
   forms.config.addEventListener("submit", (e) => {
@@ -173,39 +220,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.readAsText(file);
   });
 
-  // ----- Cadastro / Edição de clientes -----
-  buttons.showClienteForm.addEventListener("click", () => {
-    resetEditingCliente();
-    showSection("clienteForm");
-  });
-
-  buttons.cancelarCliente.addEventListener("click", () =>
-    showSection("clientes")
-  );
-
-  forms.cliente.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const clienteData = {
-      nome: inputs.clienteNome.value.trim(),
-      cpf: inputs.clienteCpf.value.trim(),
-      dataNascimento: inputs.clienteDataNascimento.value,
-      telefone: inputs.clienteTelefone.value.trim(),
-      celular: inputs.clienteCelular.value.trim(),
-    };
-
-    if (Object.values(clienteData).some((v) => !v)) {
-      return showToast("Todos os campos são obrigatórios!", "danger");
-    }
-
-    if (saveCliente(clienteData)) {
-      resetEditingCliente();
-      forms.cliente.reset();
-      renderClientes();
-      attachEnderecoButtons();
-      showSection("clientes");
-    }
-  });
-
   // ----- Máscaras de input -----
   const maskInput = (input, pattern, maxLength) => {
     input.addEventListener("input", () => {
@@ -224,6 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ],
     11
   );
+
   maskInput(
     inputs.clienteTelefone,
     [{ regex: /(\d{4})(\d)/, repl: "$1-$2" }],
@@ -235,4 +250,107 @@ document.addEventListener("DOMContentLoaded", () => {
     9
   );
   maskInput(inputs.enderecoCep, [{ regex: /(\d{5})(\d)/, repl: "$1-$2" }], 8);
+
+  // ----- Configura validação dos campos -----
+  const camposSemValidacao = [
+    "usuario",
+    "senha",
+    "novoUsuario",
+    "novaSenha",
+    "nome",
+    "clienteNome",
+    "clienteDataNascimento",
+    "enderecoRua",
+    "enderecoBairro",
+    "enderecoCidade",
+    "enderecoEstado",
+    "enderecoPais",
+  ];
+
+  camposSemValidacao.forEach((id) => setupFieldValidation(inputs[id]));
+
+  // Campos com validação de formato
+  setupFieldValidation(inputs.clienteCpf, validateCPF);
+  inputs.clienteCpf.dataset.typeCheck = "cpf";
+
+  setupFieldValidation(inputs.clienteTelefone, validateTelefone);
+  inputs.clienteTelefone.dataset.typeCheck = "telefone";
+
+  setupFieldValidation(inputs.clienteCelular, validateCelular);
+  inputs.clienteCelular.dataset.typeCheck = "celular";
+
+  setupFieldValidation(inputs.enderecoCep, validateCEP);
+  inputs.enderecoCep.dataset.typeCheck = "cep";
+
+  // ----- Setup formulários obrigatórios -----
+  setupFormValidation("loginForm");
+  setupFormValidation("registerForm");
+  setupFormValidation("clienteForm");
+  setupFormValidation("enderecoForm");
+
+  // ----- Salvar Cliente -----
+  forms.cliente.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const clienteData = {
+      nome: inputs.clienteNome.value.trim(),
+      cpf: inputs.clienteCpf.value.trim(),
+      dataNascimento: inputs.clienteDataNascimento.value,
+      telefone: inputs.clienteTelefone.value.trim(),
+      celular: inputs.clienteCelular.value.trim(),
+    };
+
+    if (!validaForm(forms.cliente))
+      return showToast("Preencha todos os campos corretamente!", "danger");
+
+    if (saveCliente(clienteData)) {
+      resetEditingCliente();
+      forms.cliente.reset();
+      renderClientes();
+      attachEnderecoButtons();
+      showSection("clientes");
+    }
+  });
+
+  // ----- Salvar Endereço -----
+  forms.endereco.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const enderecoData = {
+      cep: inputs.enderecoCep.value.trim(),
+      rua: inputs.enderecoRua.value.trim(),
+      bairro: inputs.enderecoBairro.value.trim(),
+      cidade: inputs.enderecoCidade.value.trim(),
+      estado: inputs.enderecoEstado.value.trim(),
+      pais: inputs.enderecoPais.value.trim(),
+    };
+
+    if (!validaForm(forms.endereco))
+      return showToast("Preencha todos os campos corretamente!", "danger");
+
+    if (saveEndereco(enderecoData)) {
+      resetEditingEndereco();
+      forms.endereco.reset();
+      renderEnderecos();
+      showSection("enderecos");
+    }
+  });
+
+  // ----- Função genérica para validar formulário -----
+  function validaForm(form) {
+    let valid = true;
+    form.querySelectorAll("input[required]").forEach((input) => {
+      const typeCheckFn = input.dataset.typeCheck
+        ? window[
+            "validate" +
+              input.dataset.typeCheck.charAt(0).toUpperCase() +
+              input.dataset.typeCheck.slice(1)
+          ]
+        : null;
+      if (!input.value || (typeCheckFn && !typeCheckFn(input.value))) {
+        input.dataset.submitError = "true";
+        input.style.borderColor = "#dc2626";
+        valid = false;
+      }
+    });
+    return valid;
+  }
 });
