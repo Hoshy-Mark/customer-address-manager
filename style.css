@@ -62,9 +62,42 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
 }
 
-input:invalid {
-  border-color: #dc2626;
-  box-shadow: 0 0 0 2px rgba(220,38,38,0.2);
+/* Campo vazio */
+input:required:placeholder-shown {
+  border-color: #facc15; /* amarelo */
+}
+
+/* Campo inválido */
+input:required:invalid:not(:placeholder-shown) {
+  border-color: #dc2626; /* vermelho */
+}
+
+/* Campo válido */
+input:required:valid {
+  border-color: #16a34a; /* verde*/
+}
+
+input[type=file] {
+  border: 1px solid #d1d5db !important;
+}
+
+/* Aplica a inputs de login e cadastro de usuário */
+#loginForm input:required,
+#registerForm input:required {
+  background-color: #fff; /* mantém branco por dentro */
+  border-width: 2px;
+}
+
+/* Campo de Login ou Cadastro Vazio */
+#loginForm input:required:placeholder-shown,
+#registerForm input:required:placeholder-shown {
+  border-color: #facc15; /* amarelo */
+}
+
+/* Campo de Login ou Cadastro preenchido */
+#loginForm input:required:not(:placeholder-shown),
+#registerForm input:required:not(:placeholder-shown) {
+  border-color: #16a34a; /* verde*/
 }
 
 /* Toggle switch para checkbox principal */

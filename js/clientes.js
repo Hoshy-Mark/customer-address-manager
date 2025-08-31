@@ -75,6 +75,8 @@ export function startEditCliente(id) {
   document.getElementById("clienteTelefone").value = cliente.telefone;
   document.getElementById("clienteCelular").value = cliente.celular;
 
+  updateClienteFieldColors()
+
   // Mostra a seção do formulário e esconde a lista de clientes
   document.getElementById("clienteFormSection").classList.remove("d-none");
   document.getElementById("clientesSection").classList.add("d-none");
@@ -125,3 +127,23 @@ export function deleteCliente(id) {
     renderClientes(); // Recarrega a tabela após exclusão
   });
 }
+
+// Atualiza a cor dos campos conforme o valor
+function updateClienteFieldColors() {
+  document.querySelectorAll('#clienteForm input[required]').forEach(input => {
+    if(!input.value) {
+      input.style.borderColor = '#facc15'; // amarelo
+    } else if(!input.checkValidity()) {
+      input.style.borderColor = '#dc2626'; // vermelho
+    } else {
+      input.style.borderColor = '#16a34a'; // verde
+    }
+  });
+}
+
+document.querySelectorAll('#clienteForm input[required]').forEach(input => {
+  input.addEventListener('input', updateClienteFieldColors);
+});
+
+document.getElementById('clienteForm').addEventListener('reset', updateClienteFieldColors);
+updateClienteFieldColors();

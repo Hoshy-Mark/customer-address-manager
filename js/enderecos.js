@@ -27,6 +27,9 @@ export function renderEnderecos() {
     clienteId,
   ]);
 
+  // Busca o cliente para pegar o nome
+  const cliente = alasql("SELECT * FROM clientes WHERE id = ?", [clienteId])[0];
+
   // Limpa corpo da tabela antes de popular
   const tbody = document
     .getElementById("enderecosTable")
@@ -37,6 +40,8 @@ export function renderEnderecos() {
   enderecos.forEach((endereco) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
+      <td>${endereco.id}</td>
+      <td>${cliente.nome}</td>   <!-- Nome do cliente -->
       <td>${endereco.cep}</td>
       <td>${endereco.rua}</td>
       <td>${endereco.bairro}</td>
@@ -45,12 +50,8 @@ export function renderEnderecos() {
       <td>${endereco.pais}</td>
       <td>${endereco.principal ? "Sim" : "Não"}</td>
       <td>
-        <button class="btn btn-warning btn-sm edit-endereco" data-id="${
-          endereco.id
-        }">Editar</button>
-        <button class="btn btn-danger btn-sm delete-endereco" data-id="${
-          endereco.id
-        }">Excluir</button>
+        <button class="btn btn-warning btn-sm edit-endereco" data-id="${endereco.id}">Editar</button>
+        <button class="btn btn-danger btn-sm delete-endereco" data-id="${endereco.id}">Excluir</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -93,6 +94,7 @@ export function editEndereco(id) {
   document.getElementById("enderecoPais").value = endereco.pais;
   document.getElementById("enderecoPrincipal").checked = endereco.principal;
 
+  updateFieldColors();
   // Alterna visibilidade das seções
   document.getElementById("enderecoFormSection").classList.remove("d-none");
   document.getElementById("enderecosSection").classList.add("d-none");
@@ -191,3 +193,25 @@ export function saveEndereco(e) {
   document.getElementById("enderecosSection").classList.remove("d-none");
   renderEnderecos();
 }
+
+// Atualiza a cor dos campos conforme o valor
+function updateFieldColors() {
+  document.querySelectorAll('#enderecoForm input[required]').forEach(input => {
+    if(!input.value) {
+      input.style.borderColor = '#facc15'; // amarelo
+    } else if(!input.checkValidity()) {
+      input.style.borderColor = '#dc2626'; // vermelho
+    } else {
+      input.style.borderColor = '#16a34a'; // verde
+    }
+  });
+}
+
+// Atualiza em tempo real enquanto o usuário digita
+document.querySelectorAll('#enderecoForm input[required]').forEach(input => {
+  input.addEventListener('input', updateFieldColors);
+});
+
+// Inicializa as cores ao abrir o formulário
+document.getElementById('enderecoForm').addEventListener('reset', updateFieldColors);
+updateFieldColors();
