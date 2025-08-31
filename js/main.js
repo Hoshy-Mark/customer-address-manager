@@ -102,6 +102,19 @@ document.addEventListener("DOMContentLoaded", () => {
     showSection("enderecos");
   };
 
+  function resetFormFields(formInputs) {
+    formInputs.forEach(input => {
+      input.value = "";
+      input.dataset.submitError = "";
+      input.classList.remove("touched");
+      input.style.borderColor = "transparent";
+    });
+  }
+
+  const loginInputs = [inputs.usuario, inputs.senha];
+  const registerInputs = [inputs.nome, inputs.novoUsuario, inputs.novaSenha];
+  const configInputs = [inputs.jsonFile];
+
   // ----- Eventos globais -----
   buttons.voltarClientes.addEventListener("click", () =>
     showSection("clientes")
@@ -116,10 +129,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   buttons.exportDb.addEventListener("click", exportDB);
 
-  buttons.showRegister.addEventListener("click", () => showSection("register"));
-  buttons.showLogin.addEventListener("click", () => showSection("login"));
-  buttons.showConfig.addEventListener("click", () => showSection("config"));
-  buttons.closeConfig.addEventListener("click", () => showSection("login"));
+  // Vai para Registro → limpa Login
+  buttons.showRegister.addEventListener("click", () => {
+    showSection("register");
+    resetFormFields(loginInputs);
+  });
+
+  // Vai para Login → limpa Registro
+  buttons.showLogin.addEventListener("click", () => {
+    showSection("login");
+    resetFormFields(registerInputs);
+  });
+
+  // Vai para Config → limpa campos de Config
+  buttons.showConfig.addEventListener("click", () => {
+    showSection("config");
+    resetFormFields(configInputs);
+  });
+
+  // Fecha Config → limpa campos de Config
+  buttons.closeConfig.addEventListener("click", () => {
+    showSection("login");
+    resetFormFields(configInputs);
+  });
+
 
   buttons.showClienteForm.addEventListener("click", () => {
     resetEditingCliente();

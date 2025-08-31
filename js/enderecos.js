@@ -76,6 +76,26 @@ export function renderEnderecos() {
 export function resetEditingEndereco() {
   editingEnderecoId = null;
   document.getElementById("enderecoForm").reset();
+  resetEnderecoBorders();
+}
+
+// ----- Limpa bordas e estado do formulário de Endereço -----
+function resetEnderecoBorders() {
+  const campos = [
+    "enderecoCep",
+    "enderecoRua",
+    "enderecoBairro",
+    "enderecoCidade",
+    "enderecoEstado",
+    "enderecoPais"
+  ];
+  
+  campos.forEach(id => {
+    const input = document.getElementById(id);
+    input.classList.remove("touched");
+    input.dataset.submitError = "";
+    input.style.borderColor = "transparent";
+  });
 }
 
 // ----- Carrega os dados de um endereço no formulário para edição -----
@@ -84,6 +104,9 @@ export function editEndereco(id) {
   if (!endereco) return;
 
   editingEnderecoId = id;
+
+  // Limpa bordas antigas antes de preencher
+  resetEnderecoBorders();
 
   // Preenche campos do formulário
   document.getElementById("enderecoCep").value = endereco.cep;

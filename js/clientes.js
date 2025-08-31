@@ -60,12 +60,33 @@ export function registerCliente(nome, cpf, dataNascimento, telefone, celular) {
   return { success: true, message: "Cliente cadastrado com sucesso!" };
 }
 
+// ----- Limpa bordas e estado do formulário de cliente -----
+function resetClienteBorders() {
+  const campos = [
+    "clienteNome",
+    "clienteCpf",
+    "clienteDataNascimento",
+    "clienteTelefone",
+    "clienteCelular"
+  ];
+
+  campos.forEach(id => {
+    const input = document.getElementById(id);
+    input.classList.remove("touched");
+    input.dataset.submitError = "";
+    input.style.borderColor = "transparent";
+  });
+}
+
 // ----- Inicia edição de cliente -----
 export function startEditCliente(id) {
   const cliente = alasql("SELECT * FROM clientes WHERE id = ?", [id])[0];
   if (!cliente) return showToast("Cliente não encontrado!", "danger");
 
   editingClienteId = id; // Marca o cliente que está sendo editado
+
+  // Limpa bordas antigas antes de preencher
+  resetClienteBorders();
 
   // Preenche os campos do formulário com os dados do cliente
   document.getElementById("clienteNome").value = cliente.nome;
@@ -115,6 +136,7 @@ export function saveCliente({ nome, cpf, dataNascimento, telefone, celular }) {
 export function resetEditingCliente() {
   editingClienteId = null;
   document.getElementById("clienteForm").reset();
+  resetClienteBorders();
 }
 
 // ----- Exclui cliente -----
