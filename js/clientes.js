@@ -67,10 +67,10 @@ function resetClienteBorders() {
     "clienteCpf",
     "clienteDataNascimento",
     "clienteTelefone",
-    "clienteCelular"
+    "clienteCelular",
   ];
 
-  campos.forEach(id => {
+  campos.forEach((id) => {
     const input = document.getElementById(id);
     input.classList.remove("touched");
     input.dataset.submitError = "";
@@ -101,8 +101,9 @@ export function startEditCliente(id) {
   document.getElementById("clientesSection").classList.add("d-none");
 }
 
-// ----- Salva cliente (novo ou editado) -----
 export function saveCliente({ nome, cpf, dataNascimento, telefone, celular }) {
+  const cpfInput = document.getElementById("clienteCpf");
+
   if (editingClienteId) {
     // Atualização de cliente existente
     try {
@@ -120,15 +121,21 @@ export function saveCliente({ nome, cpf, dataNascimento, telefone, celular }) {
     }
   } else {
     // Cadastro de novo cliente
-    const result = registerCliente(
-      nome,
-      cpf,
-      dataNascimento,
-      telefone,
-      celular
+    if (alasql("SELECT * FROM clientes WHERE cpf=?", [cpf]).length) {
+      // CPF já existe → marca input vermelho e trava
+      cpfInput.classList.add("touched");
+      cpfInput.style.borderColor = "#dc2626";
+      cpfInput.dataset.submitError = "cpfExists";
+      showToast("CPF já cadastrado!", "danger");
+      return false;
+    }
+
+    alasql(
+      "INSERT INTO clientes (nome, cpf, dataNascimento, telefone, celular) VALUES (?, ?, ?, ?, ?)",
+      [nome, cpf, dataNascimento, telefone, celular]
     );
-    showToast(result.message, result.success ? "success" : "danger");
-    return result.success;
+    showToast("Cliente cadastrado com sucesso!", "success");
+    return true;
   }
 }
 
@@ -147,4 +154,3 @@ export function deleteCliente(id) {
     renderClientes(); // Recarrega a tabela após exclusão
   });
 }
-

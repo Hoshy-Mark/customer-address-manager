@@ -8,6 +8,7 @@ import {
   validateCPF,
   validateTelefone,
   validateCelular,
+  validateFormAccumulated
 } from "./ui.js";
 import {
   renderClientes,
@@ -123,8 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   buttons.logout.addEventListener("click", () => {
     showSection("login");
-    inputs.usuario.value = "";
-    inputs.senha.value = "";
+    resetFormFields(loginInputs);
+    showToast("Logout efetuado com sucesso", "success");
   });
 
   buttons.exportDb.addEventListener("click", exportDB);
@@ -220,6 +221,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----- Cadastro de usuário -----
   forms.register.addEventListener("submit", (e) => {
     e.preventDefault();
+    
+    if (!validateFormAccumulated(forms.register)) return;
+
     const success = registerUser(
       inputs.nome.value.trim(),
       inputs.novoUsuario.value.trim(),
@@ -324,6 +328,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----- Salvar Cliente -----
   forms.cliente.addEventListener("submit", (e) => {
     e.preventDefault();
+
+    if (!validateFormAccumulated(forms.cliente)) return;
+
     const clienteData = {
       nome: inputs.clienteNome.value.trim(),
       cpf: inputs.clienteCpf.value.trim(),
@@ -331,9 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
       telefone: inputs.clienteTelefone.value.trim(),
       celular: inputs.clienteCelular.value.trim(),
     };
-
-    if (!validaForm(forms.cliente))
-      return showToast("Preencha todos os campos corretamente!", "danger");
 
     if (saveCliente(clienteData)) {
       resetEditingCliente();
@@ -344,9 +348,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Verifica se CPF dupliado teve alteração
+  inputs.clienteCpf.addEventListener("input", () => {
+    // Se o erro for CPF já existente, remove o destaque vermelho ao digitar
+    if (inputs.clienteCpf.dataset.submitError === "cpfExists") {
+      inputs.clienteCpf.dataset.submitError = "";
+      inputs.clienteCpf.style.borderColor = "#16a34a"; // verde
+      inputs.clienteCpf.classList.remove("touched");
+    }
+  });
+
   // ----- Salvar Endereço -----
   forms.endereco.addEventListener("submit", (e) => {
     e.preventDefault();
+    
+    if (!validateFormAccumulated(forms.endereco)) return;
+
     const enderecoData = {
       cep: inputs.enderecoCep.value.trim(),
       rua: inputs.enderecoRua.value.trim(),
@@ -356,9 +373,6 @@ document.addEventListener("DOMContentLoaded", () => {
       pais: inputs.enderecoPais.value.trim(),
     };
 
-    if (!validaForm(forms.endereco))
-      return showToast("Preencha todos os campos corretamente!", "danger");
-
     if (saveEndereco(enderecoData)) {
       resetEditingEndereco();
       forms.endereco.reset();
@@ -367,23 +381,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ----- Função genérica para validar formulário -----
-  function validaForm(form) {
-    let valid = true;
-    form.querySelectorAll("input[required]").forEach((input) => {
-      const typeCheckFn = input.dataset.typeCheck
-        ? window[
-            "validate" +
-              input.dataset.typeCheck.charAt(0).toUpperCase() +
-              input.dataset.typeCheck.slice(1)
-          ]
-        : null;
-      if (!input.value || (typeCheckFn && !typeCheckFn(input.value))) {
-        input.dataset.submitError = "true";
-        input.style.borderColor = "#dc2626";
-        valid = false;
-      }
-    });
-    return valid;
-  }
 });

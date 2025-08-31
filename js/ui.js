@@ -160,3 +160,59 @@ export const validateCEP = (v) => /^\d{5}-\d{3}$/.test(v);
 export const validateCPF = (v) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v);
 export const validateTelefone = (v) => /^\d{4}-\d{4}$/.test(v);
 export const validateCelular = (v) => /^\d{5}-\d{4}$/.test(v);
+
+// --- Valida todos os Erros ou Alertas e os Mostrar de uma Vez ---
+export function validateFormAccumulated(form) {
+  let isValid = true;
+  const invalidFields = [];
+
+  form.querySelectorAll("input").forEach((input) => {
+    // Remove mensagens antigas
+    const oldMsg = input.parentNode.querySelector(".invalid-feedback");
+    if (oldMsg) oldMsg.remove();
+
+    const value = input.value.trim();
+    const typeCheckFn = input.dataset.typeCheck
+      ? window[
+          "validate" +
+            input.dataset.typeCheck.charAt(0).toUpperCase() +
+            input.dataset.typeCheck.slice(1)
+        ]
+      : null;
+
+    // Verifica vazio ou formato inválido
+    if (!value || (typeCheckFn && !typeCheckFn(value))) {
+      isValid = false;
+      input.classList.add("touched");
+      input.style.borderColor = "#dc2626"; // vermelho
+
+      // Cria mensagem de erro
+      const errorDiv = document.createElement("div");
+      errorDiv.className = "invalid-feedback";
+      if (!value) {
+        errorDiv.innerText = "Campo obrigatório";
+      } else if (typeCheckFn && !typeCheckFn(value)) {
+        errorDiv.innerText = "Formato inválido";
+      }
+      input.parentNode.appendChild(errorDiv);
+
+      invalidFields.push(input);
+    } else {
+      input.style.borderColor = "#16a34a"; // verde
+      input.classList.remove("touched");
+    }
+  });
+
+  if (invalidFields.length > 0) {
+    const fieldNames = invalidFields.map((f) => {
+      const label = form.querySelector(`label[for="${f.id}"]`);
+      return label ? label.innerText : f.id;
+    });
+    showToast(
+      `Preencha corretamente os campos: ${fieldNames.join(", ")}`,
+      "danger"
+    );
+  }
+
+  return isValid;
+}
