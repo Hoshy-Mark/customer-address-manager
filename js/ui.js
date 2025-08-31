@@ -161,10 +161,12 @@ export const validateCPF = (v) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v);
 export const validateTelefone = (v) => /^\d{4}-\d{4}$/.test(v);
 export const validateCelular = (v) => /^\d{5}-\d{4}$/.test(v);
 
-// --- Valida todos os Erros ou Alertas e os Mostrar de uma Vez ---
+// ----- Validação acumulada -----
 export function validateFormAccumulated(form) {
   let isValid = true;
   const invalidFields = [];
+
+  const validators = { cpf: validateCPF, cep: validateCEP, telefone: validateTelefone, celular: validateCelular };
 
   form.querySelectorAll("input").forEach((input) => {
     // Remove mensagens antigas
@@ -172,28 +174,16 @@ export function validateFormAccumulated(form) {
     if (oldMsg) oldMsg.remove();
 
     const value = input.value.trim();
-    const typeCheckFn = input.dataset.typeCheck
-      ? window[
-          "validate" +
-            input.dataset.typeCheck.charAt(0).toUpperCase() +
-            input.dataset.typeCheck.slice(1)
-        ]
-      : null;
+    const typeCheckFn = input.dataset.typeCheck ? validators[input.dataset.typeCheck] : null;
 
-    // Verifica vazio ou formato inválido
     if (!value || (typeCheckFn && !typeCheckFn(value))) {
       isValid = false;
       input.classList.add("touched");
       input.style.borderColor = "#dc2626"; // vermelho
 
-      // Cria mensagem de erro
       const errorDiv = document.createElement("div");
       errorDiv.className = "invalid-feedback";
-      if (!value) {
-        errorDiv.innerText = "Campo obrigatório";
-      } else if (typeCheckFn && !typeCheckFn(value)) {
-        errorDiv.innerText = "Formato inválido";
-      }
+      errorDiv.innerText = !value ? "Campo obrigatório" : "Formato inválido";
       input.parentNode.appendChild(errorDiv);
 
       invalidFields.push(input);
