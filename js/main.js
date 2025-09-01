@@ -170,9 +170,20 @@ document.addEventListener("DOMContentLoaded", () => {
     resetTooltips();
     showSection("enderecoForm");
   });
-  buttons.cancelarEndereco.addEventListener("click", () =>
-    showSection("enderecos")
-  );
+  buttons.cancelarEndereco.addEventListener("click", () => {
+    if (lastCreatedClienteId !== null) {
+      // Se for o primeiro endereço do cliente recém-criado, remove cliente
+      alasql("DELETE FROM clientes WHERE id = ?", [lastCreatedClienteId]);
+      showToast("Cadastro de cliente cancelado.", "info");
+      lastCreatedClienteId = null;
+      renderClientes();
+      attachEnderecoButtons();
+      showSection("clientes");
+    } else {
+      // Cancelamento normal de endereço
+      showSection("enderecos");
+    }
+  });
 
   // ----- Login -----
   forms.login.addEventListener("submit", (e) => {
@@ -328,6 +339,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFormValidation("clienteForm");
   setupFormValidation("enderecoForm");
 
+
+  let lastCreatedClienteId = null;
+
   // ----- Salvar Cliente -----
   forms.cliente.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -347,7 +361,19 @@ document.addEventListener("DOMContentLoaded", () => {
       forms.cliente.reset();
       renderClientes();
       attachEnderecoButtons();
-      showSection("clientes");
+
+      // Guarda o cliente recém-criado
+      const clientes = alasql("SELECT * FROM clientes ORDER BY id DESC LIMIT 1");
+      if (clientes.length > 0) lastCreatedClienteId = clientes[0].id;
+
+      showToast("Cliente cadastrado com sucesso!", "success");
+
+      // Redireciona para cadastro de endereço
+      renderClientesSelect();
+      inputs.selectCliente.value = lastCreatedClienteId;
+      resetEditingEndereco();
+      document.getElementById("enderecoPrincipal").checked = true;
+      showSection("enderecoForm");
     }
   });
 
@@ -364,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ----- Salvar Endereço -----
   forms.endereco.addEventListener("submit", (e) => {
     e.preventDefault();
-    
+
     if (!validateFormAccumulated(forms.endereco)) return;
 
     const enderecoData = {
@@ -376,11 +402,23 @@ document.addEventListener("DOMContentLoaded", () => {
       pais: inputs.enderecoPais.value.trim(),
     };
 
-    if (saveEndereco(enderecoData)) {
-      resetEditingEndereco();
-      forms.endereco.reset();
-      renderEnderecos();
-      showSection("enderecos");
+    const clienteId = Number(inputs.selectCliente.value);
+
+    const sucesso = saveEndereco(enderecoData);
+
+    if (sucesso) {
+      if (lastCreatedClienteId === clienteId) {
+        // Primeiro endereço → volta para lista de clientes
+        showToast("Cliente cadastrado com sucesso!", "success");
+        lastCreatedClienteId = null;
+        renderClientes();
+        attachEnderecoButtons();
+        showSection("clientes");
+      } else {
+        // Endereço adicional → mostra lista de endereços
+        renderEnderecos();
+        showSection("enderecos");
+      }
     }
   });
 

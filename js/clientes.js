@@ -14,7 +14,6 @@ export function renderClientes() {
   clientes.forEach((c) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${c.id}</td>
       <td>${c.nome}</td>
       <td>${c.cpf}</td>
       <td>${c.dataNascimento}</td>

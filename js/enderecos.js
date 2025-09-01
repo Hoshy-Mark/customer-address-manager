@@ -36,11 +36,13 @@ export function renderEnderecos() {
     .querySelector("tbody");
   tbody.innerHTML = "";
 
+  // Determina se o botão excluir deve ser mostrado
+  const mostrarExcluir = enderecos.length > 1;
+
   // Cria uma linha para cada endereço
   enderecos.forEach((endereco) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${endereco.id}</td>
       <td>${cliente.nome}</td>   <!-- Nome do cliente -->
       <td>${endereco.cep}</td>
       <td>${endereco.rua}</td>
@@ -50,26 +52,35 @@ export function renderEnderecos() {
       <td>${endereco.pais}</td>
       <td>${endereco.principal ? "Sim" : "Não"}</td>
       <td>
-        <button class="btn btn-warning btn-sm edit-endereco" data-id="${endereco.id}">Editar</button>
-        <button class="btn btn-danger btn-sm delete-endereco" data-id="${endereco.id}">Excluir</button>
+        <button class="btn btn-warning btn-sm edit-endereco" data-id="${
+          endereco.id
+        }">Editar</button>
+        ${
+          mostrarExcluir
+            ? `<button class="btn btn-danger btn-sm delete-endereco" data-id="${endereco.id}">Excluir</button>`
+            : ""
+        }
       </td>
     `;
     tbody.appendChild(tr);
   });
 
-  // Eventos dos botões "Editar" e "Excluir"
+  // Eventos dos botões
   tbody
     .querySelectorAll(".edit-endereco")
     .forEach((btn) =>
       btn.addEventListener("click", () => editEndereco(Number(btn.dataset.id)))
     );
-  tbody
-    .querySelectorAll(".delete-endereco")
-    .forEach((btn) =>
-      btn.addEventListener("click", () =>
-        deleteEndereco(Number(btn.dataset.id))
-      )
-    );
+
+  if (mostrarExcluir) {
+    tbody
+      .querySelectorAll(".delete-endereco")
+      .forEach((btn) =>
+        btn.addEventListener("click", () =>
+          deleteEndereco(Number(btn.dataset.id))
+        )
+      );
+  }
 }
 
 // ----- Reseta o formulário e o estado de edição -----
@@ -87,10 +98,10 @@ function resetEnderecoBorders() {
     "enderecoBairro",
     "enderecoCidade",
     "enderecoEstado",
-    "enderecoPais"
+    "enderecoPais",
   ];
-  
-  campos.forEach(id => {
+
+  campos.forEach((id) => {
     const input = document.getElementById(id);
     input.classList.remove("touched");
     input.dataset.submitError = "";
@@ -145,20 +156,17 @@ export function deleteEndereco(id) {
   renderEnderecos();
 }
 
-// ----- Salva um endereço (inserção ou atualização) -----
 export function saveEndereco(arg) {
-  let e;
   let enderecoData = null;
 
-  // Se o argumento tiver preventDefault, é um evento
+  // Se o argumento for evento, previne submit
   if (arg && typeof arg.preventDefault === "function") {
-    e = arg;
-    e.preventDefault();
+    arg.preventDefault();
   } else {
-    enderecoData = arg; // dados já processados
+    enderecoData = arg;
   }
 
-  // Se não recebeu dados, pega do formulário
+  // Pega dados do formulário
   const clienteId = Number(document.getElementById("selectCliente").value);
   const cep = document.getElementById("enderecoCep").value.trim();
   const rua = document.getElementById("enderecoRua").value.trim();
@@ -169,9 +177,12 @@ export function saveEndereco(arg) {
   let principal = document.getElementById("enderecoPrincipal").checked;
 
   if (enderecoData) {
-    Object.assign({ cep, rua, bairro, cidade, estado, pais, principal }, enderecoData);
+    Object.assign(
+      { cep, rua, bairro, cidade, estado, pais, principal },
+      enderecoData
+    );
   }
-  // Endereços existentes do cliente
+
   const enderecosCliente = alasql(
     "SELECT * FROM enderecos WHERE clienteId = ?",
     [clienteId]
@@ -203,8 +214,7 @@ export function saveEndereco(arg) {
   } else {
     // --- Inserção ---
     if (enderecosCliente.length === 0) {
-      // Primeiro endereço do cliente → sempre principal
-      principal = true;
+      principal = true; // primeiro endereço sempre principal
     } else if (principal) {
       // Se marcou como principal → desmarca os outros
       alasql("UPDATE enderecos SET principal = false WHERE clienteId = ?", [
@@ -221,9 +231,9 @@ export function saveEndereco(arg) {
     showToast("Endereço cadastrado com sucesso!");
   }
 
-  // Reseta formulário e volta para a listagem
+  // Reseta formulário, mas não altera a tela
   resetEditingEndereco();
-  document.getElementById("enderecoFormSection").classList.add("d-none");
-  document.getElementById("enderecosSection").classList.remove("d-none");
-  renderEnderecos();
+
+  // Retorna true para indicar que salvou com sucesso
+  return true;
 }
