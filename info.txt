@@ -68,3 +68,4 @@ Observações importantes:
 - Todos os dados do sistema ficam em memória via AlaSQL.js e podem ser exportados/importados em JSON.
 - Ao excluir clientes ou endereços, a aplicação garante integridade, mantendo ao menos um endereço principal por cliente.
 - Máscaras foram aplicadas em CPF, telefone, celular e CEP para manter consistência dos dados.
+- Caso queiram avaliar todo o desenvolvimento, aqui o repositorio com todos os Commits: https://github.com/Hoshy-Mark/customer-address-manager
