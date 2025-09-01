@@ -83,6 +83,36 @@ export function renderEnderecos() {
   }
 }
 
+
+// ----- Função que ajusta o checkbox de principal -----
+export function updateEnderecoPrincipalCheckbox(clienteId, editingId = null) {
+  const checkbox = document.getElementById("enderecoPrincipal");
+  const enderecosCliente = alasql(
+    "SELECT * FROM enderecos WHERE clienteId = ?",
+    [clienteId]
+  );
+
+  if (enderecosCliente.length === 0) {
+    checkbox.checked = true;
+    checkbox.disabled = true;
+  } else if (editingId) {
+    if (enderecosCliente.length === 1) {
+      checkbox.checked = true;
+      checkbox.disabled = true;
+    } else {
+      const endereco = alasql(
+        "SELECT * FROM enderecos WHERE id = ?",
+        [editingId]
+      )[0];
+      checkbox.checked = endereco.principal;
+      checkbox.disabled = false;
+    }
+  } else {
+    checkbox.checked = false;
+    checkbox.disabled = false;
+  }
+}
+
 // ----- Reseta o formulário e o estado de edição -----
 export function resetEditingEndereco() {
   editingEnderecoId = null;
@@ -105,7 +135,7 @@ function resetEnderecoBorders() {
     const input = document.getElementById(id);
     input.classList.remove("touched");
     input.dataset.submitError = "";
-    input.style.borderColor = "transparent";
+    input.style.borderColor = "#d1d5db";
   });
 }
 
@@ -115,8 +145,6 @@ export function editEndereco(id) {
   if (!endereco) return;
 
   editingEnderecoId = id;
-
-  // Limpa bordas antigas antes de preencher
   resetEnderecoBorders();
 
   // Preenche campos do formulário
@@ -126,9 +154,10 @@ export function editEndereco(id) {
   document.getElementById("enderecoCidade").value = endereco.cidade;
   document.getElementById("enderecoEstado").value = endereco.estado;
   document.getElementById("enderecoPais").value = endereco.pais;
-  document.getElementById("enderecoPrincipal").checked = endereco.principal;
 
-  // Alterna visibilidade das seções
+  const clienteId = endereco.clienteId;
+  updateEnderecoPrincipalCheckbox(clienteId, id); // <-- aqui
+
   document.getElementById("enderecoFormSection").classList.remove("d-none");
   document.getElementById("enderecosSection").classList.add("d-none");
 }

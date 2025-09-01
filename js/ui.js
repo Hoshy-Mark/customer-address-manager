@@ -90,7 +90,7 @@ export function setupFieldValidation(input, typeCheck = null) {
 
     // Antes de interação ou submit → neutro
     if (!input.classList.contains("touched") && !input.dataset.submitError) {
-      input.style.borderColor = "transparent";
+      input.style.borderColor = "#d1d5db";
       return;
     }
 
@@ -130,7 +130,7 @@ export function setupFormValidation(formId) {
       if (input.dataset.submitError) {
         input.style.borderColor = "#dc2626"; // vermelho de submit
       } else if (!input.classList.contains("touched")) {
-        input.style.borderColor = "transparent"; // neutro antes da interação
+        input.style.borderColor = "#d1d5db"; // neutro antes da interação
       } else {
         input.style.borderColor = input.value ? "#16a34a" : "#facc15"; // verde ou amarelo
       }
@@ -150,7 +150,7 @@ export function setupFormValidation(formId) {
 
   form.addEventListener("reset", () => {
     form.querySelectorAll("input[required]").forEach((input) => {
-      input.style.borderColor = "transparent";
+      input.style.borderColor ="#d1d5db";
       input.classList.remove("touched");
       input.dataset.submitError = "";
     });
@@ -158,10 +158,15 @@ export function setupFormValidation(formId) {
 }
 
 // --- Funções de validação de formato ---
+// CEP e CPF permanecem iguais
 export const validateCEP = (v) => /^\d{5}-\d{3}$/.test(v);
 export const validateCPF = (v) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v);
-export const validateTelefone = (v) => /^\d{4}-\d{4}$/.test(v);
-export const validateCelular = (v) => /^\d{5}-\d{4}$/.test(v);
+
+// Telefone fixo: (11) 1234-5678
+export const validateTelefone = (v) => /^\(\d{2}\)\s?\d{4}-\d{4}$/.test(v);
+
+// Celular: (11) 91234-5678
+export const validateCelular = (v) => /^\(\d{2}\)\s?\d{5}-\d{4}$/.test(v);
 
 // Função para remover todos os tooltips ativos do DOM
 export function resetTooltips() {

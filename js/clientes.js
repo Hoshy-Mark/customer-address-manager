@@ -73,7 +73,7 @@ function resetClienteBorders() {
     const input = document.getElementById(id);
     input.classList.remove("touched");
     input.dataset.submitError = "";
-    input.style.borderColor = "transparent";
+    input.style.borderColor = "#d1d5db";
   });
 }
 
@@ -133,7 +133,6 @@ export function saveCliente({ nome, cpf, dataNascimento, telefone, celular }) {
       "INSERT INTO clientes (nome, cpf, dataNascimento, telefone, celular) VALUES (?, ?, ?, ?, ?)",
       [nome, cpf, dataNascimento, telefone, celular]
     );
-    showToast("Cliente cadastrado com sucesso!", "success");
     return true;
   }
 }

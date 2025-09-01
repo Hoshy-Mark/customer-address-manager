@@ -1,3 +1,4 @@
+// Importação de módulos
 import { initDB, exportDB, loadJSONToDB } from "./db.js";
 import { loginUser, registerUser } from "./auth.js";
 import {
@@ -9,7 +10,7 @@ import {
   validateTelefone,
   validateCelular,
   validateFormAccumulated,
-  resetTooltips
+  resetTooltips,
 } from "./ui.js";
 import {
   renderClientes,
@@ -21,13 +22,16 @@ import {
   renderClientesSelect,
   saveEndereco,
   resetEditingEndereco,
+  updateEnderecoPrincipalCheckbox
 } from "./enderecos.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  // ----- Inicialização do banco -----
-  initDB();
+// ----- Inicialização da aplicação -----
 
-  // ----- Mapear seções e formulários -----
+document.addEventListener("DOMContentLoaded", () => {
+  initDB(); // Inicializa o banco de dados
+
+  // ----- Seleção de elementos do DOM -----
+
   const sections = {
     login: document.getElementById("loginSection"),
     register: document.getElementById("registerSection"),
@@ -81,12 +85,33 @@ document.addEventListener("DOMContentLoaded", () => {
     jsonFile: document.getElementById("jsonFile"),
   };
 
+  // ----- Variáveis auxiliares -----
+
+  let lastCreatedClienteId = null;
+
+  const loginInputs = [inputs.usuario, inputs.senha];
+  const registerInputs = [inputs.nome, inputs.novoUsuario, inputs.novaSenha];
+  const configInputs = [inputs.jsonFile];
+
   // ----- Funções utilitárias -----
+
+  // Mostra apenas a seção desejada
   const showSection = (sectionKey) => {
     Object.values(sections).forEach((sec) => sec.classList.add("d-none"));
     if (sectionKey) sections[sectionKey].classList.remove("d-none");
   };
 
+  // Limpa campos de formulário e reset de bordas
+  function resetFormFields(formInputs) {
+    formInputs.forEach((input) => {
+      input.value = "";
+      input.dataset.submitError = "";
+      input.classList.remove("touched");
+      input.style.borderColor = "#d1d5db";
+    });
+  }
+
+  // Adiciona evento de abrir endereços ao clicar em botão
   const attachEnderecoButtons = () => {
     document
       .querySelectorAll(".viewEnderecosBtn")
@@ -97,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
   };
 
+  // Abre a seção de endereços de um cliente específico
   const openEnderecos = (clienteId) => {
     renderClientesSelect();
     inputs.selectCliente.value = clienteId;
@@ -104,174 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showSection("enderecos");
   };
 
-  function resetFormFields(formInputs) {
-    formInputs.forEach(input => {
-      input.value = "";
-      input.dataset.submitError = "";
-      input.classList.remove("touched");
-      input.style.borderColor = "transparent";
-    });
-  }
-
-  const loginInputs = [inputs.usuario, inputs.senha];
-  const registerInputs = [inputs.nome, inputs.novoUsuario, inputs.novaSenha];
-  const configInputs = [inputs.jsonFile];
-
-  // ----- Eventos globais -----
-  buttons.voltarClientes.addEventListener("click", () =>
-    showSection("clientes")
-  );
-  inputs.selectCliente.addEventListener("change", renderEnderecos);
-
-  buttons.logout.addEventListener("click", () => {
-    showSection("login");
-    resetFormFields(loginInputs);
-    showToast("Logout efetuado com sucesso", "success");
-  });
-
-  buttons.exportDb.addEventListener("click", exportDB);
-
-  // Vai para Registro → limpa Login
-  buttons.showRegister.addEventListener("click", () => {
-    showSection("register");
-    resetFormFields(loginInputs);
-  });
-
-  // Vai para Login → limpa Registro
-  buttons.showLogin.addEventListener("click", () => {
-    showSection("login");
-    resetFormFields(registerInputs);
-  });
-
-  // Vai para Config → limpa campos de Config
-  buttons.showConfig.addEventListener("click", () => {
-    showSection("config");
-    resetFormFields(configInputs);
-  });
-
-  // Fecha Config → limpa campos de Config
-  buttons.closeConfig.addEventListener("click", () => {
-    showSection("login");
-    resetFormFields(configInputs);
-  });
-
-
-  buttons.showClienteForm.addEventListener("click", () => {
-    resetEditingCliente();
-    resetTooltips();
-    showSection("clienteForm");
-  });
-
-  buttons.cancelarCliente.addEventListener("click", () =>
-    showSection("clientes")
-  );
-  buttons.showEnderecoForm.addEventListener("click", () => {
-    resetEditingEndereco();
-    resetTooltips();
-    showSection("enderecoForm");
-  });
-  buttons.cancelarEndereco.addEventListener("click", () => {
-    if (lastCreatedClienteId !== null) {
-      // Se for o primeiro endereço do cliente recém-criado, remove cliente
-      alasql("DELETE FROM clientes WHERE id = ?", [lastCreatedClienteId]);
-      showToast("Cadastro de cliente cancelado.", "info");
-      lastCreatedClienteId = null;
-      renderClientes();
-      attachEnderecoButtons();
-      showSection("clientes");
-    } else {
-      // Cancelamento normal de endereço
-      showSection("enderecos");
-    }
-  });
-
-  // ----- Login -----
-  forms.login.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const username = inputs.usuario.value.trim();
-    const password = inputs.senha.value.trim();
-
-    const user = loginUser(username, password);
-
-    if (user) {
-      showToast(`Bem-vindo(a), ${user.nome}!`, "success");
-      showSection("clientes");
-      renderClientes();
-      attachEnderecoButtons();
-      // reseta bordas do login
-      inputs.usuario.dataset.submitError = "";
-      inputs.senha.dataset.submitError = "";
-      inputs.usuario.classList.add("touched");
-      inputs.senha.classList.add("touched");
-      inputs.usuario.style.borderColor = "#16a34a";
-      inputs.senha.style.borderColor = "#16a34a";
-    } else {
-      showToast("Usuário ou senha inválidos!", "danger");
-      // marca erro de submit nos dois campos
-      inputs.usuario.dataset.submitError = "true";
-      inputs.senha.dataset.submitError = "true";
-      inputs.usuario.classList.add("touched");
-      inputs.senha.classList.add("touched");
-      inputs.usuario.style.borderColor = "#dc2626";
-      inputs.senha.style.borderColor = "#dc2626";
-    }
-  });
-
-  // coloca ambos verde se estiverem preenchidos após ser invalido e haver mudança
-  [inputs.usuario, inputs.senha].forEach((input) => {
-    input.addEventListener("input", () => {
-      const username = inputs.usuario.value.trim();
-      const password = inputs.senha.value.trim();
-
-      // se houver valores nos dois campos, mostra verde
-      if (username && password) {
-        inputs.usuario.dataset.submitError = "";
-        inputs.senha.dataset.submitError = "";
-        inputs.usuario.style.borderColor = "#16a34a";
-        inputs.senha.style.borderColor = "#16a34a";
-      }
-    });
-  });
-  // ----- Cadastro de usuário -----
-  forms.register.addEventListener("submit", (e) => {
-    e.preventDefault();
-    
-    if (!validateFormAccumulated(forms.register)) return;
-
-    const success = registerUser(
-      inputs.nome.value.trim(),
-      inputs.novoUsuario.value.trim(),
-      inputs.novaSenha.value.trim()
-    );
-    showToast(
-      success ? "Usuário cadastrado com sucesso!" : "Usuário já existe!",
-      success ? "success" : "danger"
-    );
-    if (success) forms.register.reset();
-  });
-
-  // ----- Configurações / Upload JSON -----
-  forms.config.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const file = inputs.jsonFile.files[0];
-    if (!file) return showToast("Nenhum arquivo selecionado!", "danger");
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        loadJSONToDB(JSON.parse(event.target.result));
-        showToast("Banco carregado com sucesso!", "success");
-        forms.config.reset();
-        showSection("login");
-      } catch (err) {
-        console.error(err);
-        showToast("Erro ao processar arquivo JSON!", "danger");
-      }
-    };
-    reader.readAsText(file);
-  });
-
-  // ----- Máscaras de input -----
+  // Máscaras de inputs (CPF, telefone, celular, CEP)
   const maskInput = (input, pattern, maxLength) => {
     input.addEventListener("input", () => {
       let value = input.value.replace(/\D/g, "").slice(0, maxLength);
@@ -292,17 +151,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   maskInput(
     inputs.clienteTelefone,
-    [{ regex: /(\d{4})(\d)/, repl: "$1-$2" }],
-    8
+    [
+      { regex: /^(\d{2})(\d)/, repl: "($1) $2" },
+      { regex: /(\d{4})(\d)/, repl: "$1-$2" }
+    ],
+    10
   );
+
   maskInput(
     inputs.clienteCelular,
-    [{ regex: /(\d{5})(\d)/, repl: "$1-$2" }],
-    9
+    [
+      { regex: /^(\d{2})(\d)/, repl: "($1) $2" },
+      { regex: /(\d{5})(\d)/, repl: "$1-$2" }
+    ],
+    11
   );
   maskInput(inputs.enderecoCep, [{ regex: /(\d{5})(\d)/, repl: "$1-$2" }], 8);
 
-  // ----- Configura validação dos campos -----
+  // ----- Configuração de validação -----
+
   const camposSemValidacao = [
     "usuario",
     "senha",
@@ -333,19 +200,166 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFieldValidation(inputs.enderecoCep, validateCEP);
   inputs.enderecoCep.dataset.typeCheck = "cep";
 
-  // ----- Setup formulários obrigatórios -----
+  // Setup de formulários obrigatórios
   setupFormValidation("loginForm");
   setupFormValidation("registerForm");
   setupFormValidation("clienteForm");
   setupFormValidation("enderecoForm");
 
+  // ----- Eventos globais de navegação -----
 
-  let lastCreatedClienteId = null;
+  buttons.showRegister.addEventListener("click", () => {
+    showSection("register");
+    resetFormFields(loginInputs);
+  });
 
-  // ----- Salvar Cliente -----
+  buttons.showLogin.addEventListener("click", () => {
+    showSection("login");
+    resetFormFields(registerInputs);
+  });
+
+  buttons.showConfig.addEventListener("click", () => {
+    showSection("config");
+    resetFormFields(configInputs);
+  });
+
+  buttons.closeConfig.addEventListener("click", () => {
+    showSection("login");
+    resetFormFields(configInputs);
+  });
+
+  buttons.voltarClientes.addEventListener("click", () =>
+    showSection("clientes")
+  );
+  inputs.selectCliente.addEventListener("change", renderEnderecos);
+
+  buttons.logout.addEventListener("click", () => {
+    showSection("login");
+    resetFormFields(loginInputs);
+    showToast("Logout efetuado com sucesso", "success");
+  });
+
+  buttons.exportDb.addEventListener("click", exportDB);
+
+  buttons.showClienteForm.addEventListener("click", () => {
+    resetEditingCliente();
+    resetTooltips();
+    showSection("clienteForm");
+  });
+
+  buttons.cancelarCliente.addEventListener("click", () =>
+    showSection("clientes")
+  );
+
+  buttons.showEnderecoForm.addEventListener("click", () => {
+    resetEditingEndereco();
+    resetTooltips();
+
+    const clienteId = Number(inputs.selectCliente.value);
+    updateEnderecoPrincipalCheckbox(clienteId);
+
+    showSection("enderecoForm");
+  });
+
+  buttons.cancelarEndereco.addEventListener("click", () => {
+    if (lastCreatedClienteId !== null) {
+      alasql("DELETE FROM clientes WHERE id = ?", [lastCreatedClienteId]);
+      showToast("Cadastro de cliente cancelado.", "info");
+      lastCreatedClienteId = null;
+      renderClientes();
+      attachEnderecoButtons();
+      showSection("clientes");
+    } else {
+      showSection("enderecos");
+    }
+  });
+
+  // ----- Login -----
+
+  forms.login.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const username = inputs.usuario.value.trim();
+    const password = inputs.senha.value.trim();
+    const user = loginUser(username, password);
+
+    if (user) {
+      showToast(`Bem-vindo(a), ${user.nome}!`, "success");
+      showSection("clientes");
+      renderClientes();
+      attachEnderecoButtons();
+      [inputs.usuario, inputs.senha].forEach((input) => {
+        input.dataset.submitError = "";
+        input.classList.add("touched");
+        input.style.borderColor = "#16a34a";
+      });
+    } else {
+      showToast("Usuário ou senha inválidos!", "danger");
+      [inputs.usuario, inputs.senha].forEach((input) => {
+        input.dataset.submitError = "true";
+        input.classList.add("touched");
+        input.style.borderColor = "#dc2626";
+      });
+    }
+  });
+
+  // Atualiza bordas para verde quando campos preenchidos
+  [inputs.usuario, inputs.senha].forEach((input) =>
+    input.addEventListener("input", () => {
+      if (inputs.usuario.value.trim() && inputs.senha.value.trim()) {
+        [inputs.usuario, inputs.senha].forEach((inp) => {
+          inp.dataset.submitError = "";
+          inp.style.borderColor = "#16a34a";
+        });
+      }
+    })
+  );
+
+  // ----- Registro de usuário -----
+
+  forms.register.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!validateFormAccumulated(forms.register)) return;
+
+    const success = registerUser(
+      inputs.nome.value.trim(),
+      inputs.novoUsuario.value.trim(),
+      inputs.novaSenha.value.trim()
+    );
+
+    showToast(
+      success ? "Usuário cadastrado com sucesso!" : "Usuário já existe!",
+      success ? "success" : "danger"
+    );
+
+    if (success) forms.register.reset();
+  });
+
+  // -----  Configurações - Upload JSON -----
+
+  forms.config.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const file = inputs.jsonFile.files[0];
+    if (!file) return showToast("Nenhum arquivo selecionado!", "danger");
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        loadJSONToDB(JSON.parse(event.target.result));
+        showToast("Banco carregado com sucesso!", "success");
+        forms.config.reset();
+        showSection("login");
+      } catch (err) {
+        console.error(err);
+        showToast("Erro ao processar arquivo JSON!", "danger");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // ----- Cadastro de cliente -----
+
   forms.cliente.addEventListener("submit", (e) => {
     e.preventDefault();
-
     if (!validateFormAccumulated(forms.cliente)) return;
 
     const clienteData = {
@@ -366,31 +380,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const clientes = alasql("SELECT * FROM clientes ORDER BY id DESC LIMIT 1");
       if (clientes.length > 0) lastCreatedClienteId = clientes[0].id;
 
-      showToast("Cliente cadastrado com sucesso!", "success");
-
       // Redireciona para cadastro de endereço
       renderClientesSelect();
       inputs.selectCliente.value = lastCreatedClienteId;
       resetEditingEndereco();
-      document.getElementById("enderecoPrincipal").checked = true;
+      const clienteId = Number(inputs.selectCliente.value);
+      updateEnderecoPrincipalCheckbox(clienteId);
       showSection("enderecoForm");
     }
   });
 
-  // Verifica se CPF dupliado teve alteração
+  // Atualiza destaque de CPF duplicado
   inputs.clienteCpf.addEventListener("input", () => {
-    // Se o erro for CPF já existente, remove o destaque vermelho ao digitar
     if (inputs.clienteCpf.dataset.submitError === "cpfExists") {
       inputs.clienteCpf.dataset.submitError = "";
-      inputs.clienteCpf.style.borderColor = "#16a34a"; // verde
+      inputs.clienteCpf.style.borderColor = "#16a34a";
       inputs.clienteCpf.classList.remove("touched");
     }
   });
 
-  // ----- Salvar Endereço -----
+  // ----- Cadastro de endereço -----
+
   forms.endereco.addEventListener("submit", (e) => {
     e.preventDefault();
-
     if (!validateFormAccumulated(forms.endereco)) return;
 
     const enderecoData = {
@@ -403,7 +415,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const clienteId = Number(inputs.selectCliente.value);
-
     const sucesso = saveEndereco(enderecoData);
 
     if (sucesso) {
@@ -421,5 +432,4 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
-
 });
