@@ -95,7 +95,9 @@ export function setupFieldValidation(input, typeCheck = null) {
     }
 
     if (!value) {
-      input.style.borderColor = input.dataset.submitError ? "#dc2626" : "#facc15";
+      input.style.borderColor = input.dataset.submitError
+        ? "#dc2626"
+        : "#facc15";
     } else if (typeCheck && !typeCheck(value)) {
       input.style.borderColor = "#dc2626";
     } else {
@@ -161,35 +163,76 @@ export const validateCPF = (v) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v);
 export const validateTelefone = (v) => /^\d{4}-\d{4}$/.test(v);
 export const validateCelular = (v) => /^\d{5}-\d{4}$/.test(v);
 
+// Função para remover todos os tooltips ativos do DOM
+export function resetTooltips() {
+  // Seleciona todos os elementos com tooltip
+  const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  
+  tooltipElements.forEach((el) => {
+    const instance = bootstrap.Tooltip.getInstance(el);
+    if (instance) instance.dispose(); // destrói o tooltip
+    el.removeAttribute('data-bs-toggle');
+    el.removeAttribute('title');
+  });
+}
+
 // ----- Validação acumulada -----
 export function validateFormAccumulated(form) {
   let isValid = true;
   const invalidFields = [];
-
-  const validators = { cpf: validateCPF, cep: validateCEP, telefone: validateTelefone, celular: validateCelular };
+  const validators = {
+    cpf: validateCPF,
+    cep: validateCEP,
+    telefone: validateTelefone,
+    celular: validateCelular,
+  };
 
   form.querySelectorAll("input").forEach((input) => {
-    // Remove mensagens antigas
-    const oldMsg = input.parentNode.querySelector(".invalid-feedback");
-    if (oldMsg) oldMsg.remove();
+    // Remove tooltip antigo se existir
+    const oldTooltip = bootstrap.Tooltip.getInstance(input);
+    if (oldTooltip) oldTooltip.dispose();
+    input.removeAttribute("data-bs-toggle");
+    input.removeAttribute("title");
 
     const value = input.value.trim();
     const typeCheckFn = input.dataset.typeCheck ? validators[input.dataset.typeCheck] : null;
+    let errorMsg = "";
+    let errorType = "";
 
-    if (!value || (typeCheckFn && !typeCheckFn(value))) {
+    if (!value) {
+      errorMsg = "Campo obrigatório";
+      errorType = "warning";
+    } else if (typeCheckFn && !typeCheckFn(value)) {
+      errorMsg = "Formato inválido";
+      errorType = "error";
+    }
+
+    if (errorMsg) {
       isValid = false;
       input.classList.add("touched");
-      input.style.borderColor = "#dc2626"; // vermelho
+      input.style.borderColor = errorType === "warning" ? "#facc15" : "#dc2626";
 
-      const errorDiv = document.createElement("div");
-      errorDiv.className = "invalid-feedback";
-      errorDiv.innerText = !value ? "Campo obrigatório" : "Formato inválido";
-      input.parentNode.appendChild(errorDiv);
+      // Configura tooltip
+      input.setAttribute("data-bs-toggle", "tooltip");
+      input.setAttribute("data-bs-placement", "top");
+      input.setAttribute("title", errorMsg);
+
+      const tooltip = new bootstrap.Tooltip(input, {
+        trigger: "hover focus",
+        customClass: errorType === "warning" ? "tooltip-warning" : "tooltip-error",
+      });
+
+      // Remove tooltip ao digitar algo
+      input.addEventListener("input", () => {
+        const instance = bootstrap.Tooltip.getInstance(input);
+        if (instance) instance.dispose();
+        input.removeAttribute("data-bs-toggle");
+        input.removeAttribute("title");
+      }, { once: true });
 
       invalidFields.push(input);
     } else {
       input.style.borderColor = "#16a34a"; // verde
-      input.classList.remove("touched");
     }
   });
 
@@ -198,10 +241,7 @@ export function validateFormAccumulated(form) {
       const label = form.querySelector(`label[for="${f.id}"]`);
       return label ? label.innerText : f.id;
     });
-    showToast(
-      `Preencha corretamente os campos: ${fieldNames.join(", ")}`,
-      "danger"
-    );
+    showToast(`Preencha corretamente os campos: ${fieldNames.join(", ")}`, "danger");
   }
 
   return isValid;

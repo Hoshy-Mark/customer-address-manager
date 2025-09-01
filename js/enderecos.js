@@ -146,10 +146,19 @@ export function deleteEndereco(id) {
 }
 
 // ----- Salva um endereço (inserção ou atualização) -----
-export function saveEndereco(e) {
-  e.preventDefault();
+export function saveEndereco(arg) {
+  let e;
+  let enderecoData = null;
 
-  // Dados do formulário
+  // Se o argumento tiver preventDefault, é um evento
+  if (arg && typeof arg.preventDefault === "function") {
+    e = arg;
+    e.preventDefault();
+  } else {
+    enderecoData = arg; // dados já processados
+  }
+
+  // Se não recebeu dados, pega do formulário
   const clienteId = Number(document.getElementById("selectCliente").value);
   const cep = document.getElementById("enderecoCep").value.trim();
   const rua = document.getElementById("enderecoRua").value.trim();
@@ -159,6 +168,9 @@ export function saveEndereco(e) {
   const pais = document.getElementById("enderecoPais").value.trim();
   let principal = document.getElementById("enderecoPrincipal").checked;
 
+  if (enderecoData) {
+    Object.assign({ cep, rua, bairro, cidade, estado, pais, principal }, enderecoData);
+  }
   // Endereços existentes do cliente
   const enderecosCliente = alasql(
     "SELECT * FROM enderecos WHERE clienteId = ?",

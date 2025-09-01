@@ -8,7 +8,8 @@ import {
   validateCPF,
   validateTelefone,
   validateCelular,
-  validateFormAccumulated
+  validateFormAccumulated,
+  resetTooltips
 } from "./ui.js";
 import {
   renderClientes,
@@ -157,6 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   buttons.showClienteForm.addEventListener("click", () => {
     resetEditingCliente();
+    resetTooltips();
     showSection("clienteForm");
   });
 
@@ -165,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   buttons.showEnderecoForm.addEventListener("click", () => {
     resetEditingEndereco();
+    resetTooltips();
     showSection("enderecoForm");
   });
   buttons.cancelarEndereco.addEventListener("click", () =>

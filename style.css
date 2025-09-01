@@ -120,9 +120,10 @@ button {
 }
 
 /* TABELAS */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
+.table-responsive table th,
+.table-responsive table td {
+  white-space: nowrap; /* impede quebra de linha */
+  min-width: 120px;    /* largura mínima para manter proporção */
 }
 
 table {
@@ -202,4 +203,20 @@ a:hover {
 .toast-info {
   background-color: #2563eb;
   color: #fff;
+}
+
+.tooltip-error.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #dc2626 !important; /* vermelho */
+}
+.tooltip-error .tooltip-inner {
+  background-color: #dc2626 !important;
+  color: #fff;
+}
+
+.tooltip-warning.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #facc15 !important; /* amarelo */
+}
+.tooltip-warning .tooltip-inner {
+  background-color: #facc15 !important;
+  color: #000;
 }
